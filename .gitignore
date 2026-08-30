@@ -13,9 +13,13 @@ build/
 *.apk
 *.aab
 
-# Keystore (release signing — không bao giờ commit)
+# Keystore (release signing thật — không bao giờ commit)
 *.jks
 *.keystore
+# app/debug.keystore là ngoại lệ: keystore DEBUG tiêu chuẩn (mật khẩu công khai
+# "android"/"android", không phải bí mật), commit để mọi build CI dùng chung 1 chữ ký
+# — xem app/build.gradle.kts signingConfigs.debug.
+!app/debug.keystore
 
 # Bí mật / config môi trường dev cá nhân — xem chamcongFaceID.md mục [6]
 local.properties

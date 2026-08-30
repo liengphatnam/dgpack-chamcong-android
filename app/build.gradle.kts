@@ -27,6 +27,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            // Khai báo tường minh 1 file keystore cố định trong project (app/debug.keystore,
+            // sinh bằng keytool trong CI nếu chưa có — xem build-apk.yml) thay vì để AGP tự
+            // dùng keystore mặc định ẩn của máy build. Máy build (GitHub Actions) là VM mới
+            // mỗi lần chạy nên nếu không cố định file này, MỖI build sẽ bị ký bằng 1 key khác
+            // nhau -> Android từ chối cài "update" đè lên bản cũ (đã xảy ra thực tế).
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -34,6 +48,7 @@ android {
         }
         debug {
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

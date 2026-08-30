@@ -24,16 +24,31 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache debug keystore
-        # Không có bước này, mỗi lần chạy trên máy ảo GitHub Actions mới, Gradle tự
-        # sinh 1 debug.keystore ngẫu nhiên khác nhau -> mỗi build ký bằng key khác
-        # nhau -> Android từ chối cài "update" (phải gỡ app cũ mới cài được bản mới).
-        # Key cache CỐ ĐỊNH (không hash theo file gì) để mọi lần build đều dùng lại
-        # đúng 1 keystore, cài đè lên nhau bình thường như 1 app thật.
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: android-debug-keystore-v1
+      - name: Generate app/debug.keystore if missing
+        # signingConfigs.debug trong app/build.gradle.kts trỏ cố định vào file này (thay
+        # vì để AGP tự dùng keystore ẩn của máy build) — file này đã được commit thẳng
+        # vào repo nên bước này thường chỉ là no-op, chỉ thực sự sinh mới nếu ai đó lỡ
+        # xoá file. Không dùng actions/cache nữa vì lần trước cache trỏ sai đường dẫn
+        # (~/.android/debug.keystore không tồn tại trên runner) khiến cache không lưu
+        # được gì, mỗi build vẫn bị ký bằng key khác nhau.
+        run: |
+          if [ ! -f app/debug.keystore ]; then
+            keytool -genkeypair -v -keystore app/debug.keystore \
+              -storepass android -keypass android -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+            echo "GENERATED=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit debug.keystore vừa sinh (chỉ chạy 1 lần duy nhất)
+        # [skip ci] để tránh push này tự kích hoạt lại chính workflow (vòng lặp vô hạn).
+        if: env.GENERATED == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/debug.keystore
+          git commit -m "chore: thêm debug.keystore cố định để mọi build CI ký giống nhau [skip ci]"
+          git push
 
       - name: Cache Gradle
         uses: actions/cache@v4
@@ -50,6 +65,18 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug -PciBuildNumber=${{ github.run_number }} --stacktrace
+
+      - name: Verify APK integrity (kích thước, chữ ký, zipalign)
+        # Kiểm tra ngay trong CI thay vì để user tải về mới phát hiện file lỗi —
+        # "App not installed" trên Android thường do APK hỏng/misaligned mà không rõ lý do.
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          echo "Kích thước: $(stat -c%s "$APK") bytes"
+          echo "SHA-256: $(sha256sum "$APK" | cut -d' ' -f1)"
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          echo "Dùng build-tools: $BUILD_TOOLS"
+          "$BUILD_TOOLS/zipalign" -c -v 4 "$APK" || (echo "::error::APK không align đúng — sẽ bị Android từ chối cài đặt" && exit 1)
+          "$BUILD_TOOLS/apksigner" verify --verbose "$APK" || (echo "::error::Chữ ký APK không hợp lệ" && exit 1)
 
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
