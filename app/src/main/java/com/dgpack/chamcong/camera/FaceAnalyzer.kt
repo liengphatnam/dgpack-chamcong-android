@@ -9,15 +9,19 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 
+/** [eyeOpenProbability] = trung bình 2 mắt, null nếu ML Kit không trả về được (hiếm). */
+data class FaceDetectionResult(val croppedBitmap: Bitmap, val eyeOpenProbability: Float?)
+
 /**
  * Phân tích khung hình camera: ML Kit chỉ PHÁT HIỆN có khuôn mặt (không biết là ai),
  * throttle xuống ~[targetFps] để tránh nóng máy vô ích trên thiết bị yếu (mục [4.3]).
  * Khi tìm thấy mặt, crop + resize rồi trả về qua [onFaceDetected] để bước sau
- * (FaceEmbedder + FaceMatcher) nhận diện danh tính.
+ * (FaceEmbedder + FaceMatcher) nhận diện danh tính. Bật classification mode để lấy kèm
+ * xác suất mắt mở — dùng cho liveness detection kiểu chớp mắt (Phase 2, mục [12]).
  */
 class FaceAnalyzer(
     private val targetFps: Int = 3,
-    private val onFaceDetected: (Bitmap) -> Unit
+    private val onFaceDetected: (FaceDetectionResult) -> Unit
 ) : ImageAnalysis.Analyzer {
 
     private val minIntervalMs = 1000L / targetFps
@@ -27,6 +31,7 @@ class FaceAnalyzer(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
             .setMinFaceSize(0.15f)
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
             .build()
     )
 
@@ -57,7 +62,15 @@ class FaceAnalyzer(
                     try {
                         val bitmap = ImageUtils.imageProxyToBitmap(imageProxy)
                         val cropped = ImageUtils.cropAndResizeFace(bitmap, largest.boundingBox)
-                        onFaceDetected(cropped)
+                        val leftProb = largest.leftEyeOpenProbability
+                        val rightProb = largest.rightEyeOpenProbability
+                        val eyeOpenProbability = when {
+                            leftProb != null && rightProb != null -> (leftProb + rightProb) / 2f
+                            leftProb != null -> leftProb
+                            rightProb != null -> rightProb
+                            else -> null
+                        }
+                        onFaceDetected(FaceDetectionResult(cropped, eyeOpenProbability))
                     } catch (_: Exception) {
                         // Khung hình lỗi (mặt sát biên, crop rỗng...) — bỏ qua, không crash camera loop.
                     }

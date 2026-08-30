@@ -1,6 +1,5 @@
 package com.dgpack.chamcong.ui.camera
 
-import android.graphics.Bitmap
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -16,6 +15,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.dgpack.chamcong.camera.FaceAnalyzer
+import com.dgpack.chamcong.camera.FaceDetectionResult
 import java.util.concurrent.Executors
 
 /**
@@ -27,7 +27,7 @@ import java.util.concurrent.Executors
 fun FaceCameraPreview(
     modifier: Modifier = Modifier,
     targetFps: Int = 3,
-    onFaceDetected: (Bitmap) -> Unit
+    onFaceDetected: (FaceDetectionResult) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dgpack.chamcong.ChamCongApplication
+import com.dgpack.chamcong.camera.FaceDetectionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,9 +44,9 @@ class EnrollViewModel(private val app: ChamCongApplication) : ViewModel() {
     }
 
     /** Gọi liên tục từ camera preview (mỗi khi phát hiện 1 khuôn mặt) để giữ khung hình mới nhất. */
-    fun onLiveFaceDetected(bitmap: Bitmap) {
+    fun onLiveFaceDetected(result: FaceDetectionResult) {
         val previous = lastLiveBitmap
-        lastLiveBitmap = bitmap
+        lastLiveBitmap = result.croppedBitmap
         previous?.recycle()
         if (!_state.value.faceReady) {
             _state.update { it.copy(faceReady = true) }

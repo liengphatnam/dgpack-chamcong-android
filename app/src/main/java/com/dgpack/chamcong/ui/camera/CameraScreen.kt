@@ -80,22 +80,47 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             }
         }
 
-        AnimatedVisibility(
-            visible = uiState.overlayName != null,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(32.dp)
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(16.dp)
+            // Phase 2 (mục [12]): gợi ý chớp mắt để xác nhận chống giả mạo — hiện trong
+            // lúc chờ, trước khi ghi nhận chấm công thành công.
+            AnimatedVisibility(
+                visible = uiState.livenessHintName != null,
+                enter = fadeIn(),
+                exit = fadeOut()
             ) {
-                Text(
-                    text = uiState.overlayName ?: "",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.goi_y_chop_mat_format, uiState.livenessHintName ?: ""),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = uiState.overlayName != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = uiState.overlayName ?: "",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
             }
         }
 
