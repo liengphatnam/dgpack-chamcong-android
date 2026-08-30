@@ -2,8 +2,8 @@
 
 App Android native (Kotlin) chấm công bằng nhận diện khuôn mặt, chạy offline-first tại
 cổng nhà máy Dona Green Pack, đồng bộ định kỳ lên **DGP.ERP**
-(`https://dgperp.azurewebsites.net`). Xem đặc tả đầy đủ tại
-[`chamcongFaceID.md`](./chamcongFaceID.md) ở repo gốc.
+(`https://dgperp.azurewebsites.net`, repo ERP: [liengphatnam/DGP.ERP](https://github.com/liengphatnam/DGP.ERP)).
+Xem đặc tả đầy đủ tại [`chamcongFaceID.md`](./chamcongFaceID.md) ở repo này.
 
 ## Yêu cầu môi trường build
 

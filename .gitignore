@@ -1,3 +1,4 @@
+# Android / Gradle
 *.iml
 .gradle/
 /local.properties
@@ -5,15 +6,18 @@
 .DS_Store
 /build
 /captures
-.externalNativeBuildDirstinct
+.externalNativeBuild
 .cxx
-local.properties
 app/build/
 build/
+*.apk
+*.aab
 
 # Keystore (release signing — không bao giờ commit)
 *.jks
 *.keystore
 
-# Bí mật / config môi trường dev cá nhân
+# Bí mật / config môi trường dev cá nhân — xem chamcongFaceID.md mục [6]
+local.properties
+secrets.properties
 *.env
