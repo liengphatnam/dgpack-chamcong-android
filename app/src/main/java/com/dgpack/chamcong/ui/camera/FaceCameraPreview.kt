@@ -60,7 +60,7 @@ fun FaceCameraPreview(
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(
                     lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    CameraSelector.DEFAULT_FRONT_CAMERA,
                     preview,
                     analysis
                 )
