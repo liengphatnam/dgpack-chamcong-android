@@ -38,7 +38,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug -PciBuildNumber=${{ github.run_number }} --stacktrace
 
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2

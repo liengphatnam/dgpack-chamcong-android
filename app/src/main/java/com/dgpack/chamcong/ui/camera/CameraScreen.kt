@@ -32,7 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
 import androidx.core.content.ContextCompat
+import com.dgpack.chamcong.BuildConfig
 import com.dgpack.chamcong.R
 import com.dgpack.chamcong.ui.appViewModel
 
@@ -111,15 +113,34 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             }
         }
 
-        // Nút quản trị nhỏ, không nổi bật, tránh công nhân bấm nhầm (mục [7]).
-        IconButton(
-            onClick = onOpenAdmin,
+        // Nút quản trị nhỏ, không nổi bật, tránh công nhân bấm nhầm (mục [7]) — có nền tròn
+        // mờ phía sau để luôn thấy được dù camera phía sau sáng hay tối.
+        Surface(
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+            shape = CircleShape,
             modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
         ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = stringResource(R.string.nut_cai_dat_enroll_hang_doi),
-                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+            IconButton(onClick = onOpenAdmin) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.nut_cai_dat_enroll_hang_doi),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        // Luôn hiện, không phụ thuộc trạng thái gì — dùng để xác nhận thiết bị đang chạy
+        // đúng bản build mới nhất khi debug từ xa.
+        Surface(
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+            shape = RoundedCornerShape(6.dp),
+            modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
+        ) {
+            Text(
+                text = "v${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
     }

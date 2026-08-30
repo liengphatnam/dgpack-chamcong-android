@@ -16,8 +16,13 @@ android {
         // (Android 8.0) để không khoá cứng nếu sau này đổi sang tablet đời cũ hơn.
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        // CI truyền -PciBuildNumber=<github.run_number> để mỗi bản build từ GitHub Actions
+        // có versionCode/versionName riêng biệt, tự hiện trên màn hình camera (xem
+        // CameraScreen.kt) — giúp xác nhận thiết bị đang chạy đúng bản mới nhất, tránh
+        // nhầm với file .apk cũ còn nằm trong thư mục Download.
+        val ciBuildNumber = (project.findProperty("ciBuildNumber") as String?)?.toIntOrNull() ?: 0
+        versionCode = if (ciBuildNumber > 0) ciBuildNumber else 1
+        versionName = if (ciBuildNumber > 0) "1.0.0-build$ciBuildNumber" else "1.0.0-dev"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,6 +47,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
