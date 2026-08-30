@@ -6,6 +6,7 @@
     <string name="nhan_dien_dang_cho">Đưa mặt lại gần camera để chấm công</string>
     <string name="chua_ket_noi_mang">Không có kết nối mạng</string>
     <string name="cho_dong_bo_format">%1$d sự kiện đang chờ đồng bộ</string>
+    <string name="vua_cham_cong">Vừa chấm công</string>
 
     <!-- Enroll -->
     <string name="tieu_de_enroll">Đăng ký khuôn mặt nhân viên</string>

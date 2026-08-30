@@ -99,17 +99,41 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             }
         }
 
-        if (hasCameraPermission && uiState.pendingCount > 0) {
-            Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.align(Alignment.TopStart).padding(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.cho_dong_bo_format, uiState.pendingCount),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                )
+        Column(
+            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (hasCameraPermission && uiState.pendingCount > 0) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.cho_dong_bo_format, uiState.pendingCount),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            if (uiState.recentScans.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                        Text(
+                            text = stringResource(R.string.vua_cham_cong),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        uiState.recentScans.forEach { scan ->
+                            Text(
+                                text = "${scan.timeLabel}  ${scan.fullName}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
         }
 
