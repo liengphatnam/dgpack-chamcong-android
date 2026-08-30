@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.dgpack.chamcong.ui.queue
 
 import androidx.compose.foundation.layout.Arrangement
