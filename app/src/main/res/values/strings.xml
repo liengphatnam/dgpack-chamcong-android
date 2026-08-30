@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Chấm Công DGPack</string>
+
+    <!-- Màn hình chính -->
+    <string name="nhan_dien_dang_cho">Đưa mặt lại gần camera để chấm công</string>
+    <string name="chua_ket_noi_mang">Không có kết nối mạng</string>
+    <string name="cho_dong_bo_format">%1$d sự kiện đang chờ đồng bộ</string>
+
+    <!-- Enroll -->
+    <string name="tieu_de_enroll">Đăng ký khuôn mặt nhân viên</string>
+    <string name="ma_nhan_vien">Mã nhân viên</string>
+    <string name="ma_nhan_vien_goi_y">Nhập đúng mã đã có trong ERP, ví dụ NV001</string>
+    <string name="ho_ten_hien_thi">Họ tên (chỉ hiển thị trên máy, không gửi lên server)</string>
+    <string name="chup_anh_format">Đã chụp %1$d/%2$d ảnh</string>
+    <string name="nut_chup_anh">Chụp ảnh</string>
+    <string name="nut_luu_enroll">Lưu đăng ký</string>
+    <string name="enroll_thanh_cong">Đã lưu khuôn mặt cho %1$s</string>
+    <string name="enroll_loi_thieu_ma">Vui lòng nhập mã nhân viên</string>
+    <string name="enroll_loi_khong_thay_mat">Không phát hiện khuôn mặt trong ảnh, vui lòng chụp lại</string>
+    <string name="enroll_loi_chua_du_anh">Cần chụp tối thiểu 3 ảnh trước khi lưu</string>
+    <string name="enroll_canh_bao_ghi_de">Mã nhân viên này đã đăng ký trước đó — lưu sẽ ghi đè dữ liệu cũ</string>
+
+    <!-- Settings -->
+    <string name="tieu_de_cai_dat">Cài đặt thiết bị</string>
+    <string name="url_server">Địa chỉ server ERP</string>
+    <string name="api_key">API Key</string>
+    <string name="ma_thiet_bi">Mã thiết bị (DeviceCode)</string>
+    <string name="nguong_similarity">Ngưỡng nhận diện (0.0 – 1.0)</string>
+    <string name="nguong_debounce_phut">Ngưỡng chống trùng (phút)</string>
+    <string name="nut_luu_cai_dat">Lưu cài đặt</string>
+    <string name="da_luu_cai_dat">Đã lưu cài đặt</string>
+
+    <!-- Queue -->
+    <string name="tieu_de_hang_doi">Hàng đợi đồng bộ</string>
+    <string name="nut_dong_bo_ngay">Đồng bộ ngay</string>
+    <string name="nut_thu_lai_unknown">Thử lại các mã chưa xác định</string>
+    <string name="dang_dong_bo">Đang đồng bộ…</string>
+    <string name="trang_thai_pending">Đang chờ</string>
+    <string name="trang_thai_synced">Đã đồng bộ</string>
+    <string name="trang_thai_duplicate">Trùng (đã có trên server)</string>
+    <string name="trang_thai_unknown_employee">Mã NV chưa có trong ERP</string>
+    <string name="trang_thai_failed">Lỗi</string>
+    <string name="canh_bao_unknown_employee">Có mã nhân viên chưa tồn tại trong ERP — vào trang \"Danh mục nhân viên\" của ERP để tạo trước, sau đó bấm \"Thử lại\"</string>
+    <string name="danh_sach_da_enroll">Danh sách đã đăng ký</string>
+
+    <!-- Chung -->
+    <string name="loi_api_key_sai">API key không đúng, vào Cài đặt kiểm tra lại</string>
+    <string name="loi_mang">Lỗi kết nối mạng, sẽ tự thử lại</string>
+    <string name="quay_lai">Quay lại</string>
+    <string name="nut_cai_dat_enroll_hang_doi">Quản trị</string>
+</resources>

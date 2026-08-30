@@ -1,0 +1,19 @@
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuildDirstinct
+.cxx
+local.properties
+app/build/
+build/
+
+# Keystore (release signing — không bao giờ commit)
+*.jks
+*.keystore
+
+# Bí mật / config môi trường dev cá nhân
+*.env

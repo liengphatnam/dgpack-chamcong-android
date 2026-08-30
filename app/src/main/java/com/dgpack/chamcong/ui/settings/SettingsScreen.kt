@@ -1,0 +1,117 @@
+package com.dgpack.chamcong.ui.settings
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.dgpack.chamcong.R
+import com.dgpack.chamcong.sync.LastSyncKind
+import com.dgpack.chamcong.ui.appViewModel
+
+@Composable
+fun SettingsScreen(onBack: () -> Unit) {
+    val viewModel = appViewModel { SettingsViewModel(it) }
+    val state by viewModel.state.collectAsState()
+
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.quay_lai))
+                }
+                Text(stringResource(R.string.tieu_de_cai_dat), style = MaterialTheme.typography.titleLarge)
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(padding)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            when (state.lastSync.kind) {
+                LastSyncKind.UNAUTHORIZED -> WarningBanner(stringResource(R.string.loi_api_key_sai))
+                LastSyncKind.NETWORK_ERROR -> WarningBanner(stringResource(R.string.loi_mang))
+                else -> {}
+            }
+
+            OutlinedTextField(
+                value = state.serverUrl,
+                onValueChange = viewModel::onServerUrlChange,
+                label = { Text(stringResource(R.string.url_server)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.apiKey,
+                onValueChange = viewModel::onApiKeyChange,
+                label = { Text(stringResource(R.string.api_key)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.deviceCode,
+                onValueChange = viewModel::onDeviceCodeChange,
+                label = { Text(stringResource(R.string.ma_thiet_bi)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.similarityThreshold,
+                onValueChange = viewModel::onSimilarityChange,
+                label = { Text(stringResource(R.string.nguong_similarity)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.debounceMinutes,
+                onValueChange = viewModel::onDebounceChange,
+                label = { Text(stringResource(R.string.nguong_debounce_phut)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(onClick = viewModel::save, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.nut_luu_cai_dat))
+            }
+
+            if (state.savedOnce) {
+                Text(
+                    text = stringResource(R.string.da_luu_cai_dat),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarningBanner(text: String) {
+    Surface(color = MaterialTheme.colorScheme.errorContainer) {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(12.dp).fillMaxWidth()
+        )
+    }
+}

@@ -1,0 +1,7 @@
+# Sao chép file này thành "local.properties" (đã có sẵn trong .gitignore, KHÔNG commit)
+# rồi điền đường dẫn Android SDK thật trên máy bạn.
+sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
+
+# Ghi chú: API key của server ERP KHÔNG khai báo ở đây.
+# API key nhập trực tiếp trong app ở màn hình Cài đặt lúc setup máy tại nhà máy,
+# lưu bằng EncryptedSharedPreferences — xem mục [6] trong chamcongFaceID.md.

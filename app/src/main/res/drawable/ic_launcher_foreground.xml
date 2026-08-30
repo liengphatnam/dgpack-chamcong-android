@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Biểu tượng khuôn mặt đơn giản, tâm nằm trong vùng an toàn 66dp của adaptive icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,29c-11.6,0 -21,9.4 -21,21c0,16 21,29 21,29s21,-13 21,-29C75,38.4 65.6,29 54,29z" />
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M54,37c-7.2,0 -13,5.8 -13,13c0,7.2 13,16 13,16s13,-8.8 13,-16C67,42.8 61.2,37 54,37z" />
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="48"
+        android:cy="49"
+        android:r="2.4" />
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="60"
+        android:cy="49"
+        android:r="2.4" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,57c1.8,2.2 4.2,3.4 7,3.4c2.8,0 5.2,-1.2 7,-3.4c0.4,-0.5 -0.3,-1.1 -0.8,-0.7c-1.6,1.6 -3.8,2.5 -6.2,2.5c-2.4,0 -4.6,-0.9 -6.2,-2.5C47.3,55.9 46.6,56.5 47,57z" />
+</vector>
