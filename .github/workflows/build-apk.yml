@@ -24,6 +24,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Cache debug keystore
+        # Không có bước này, mỗi lần chạy trên máy ảo GitHub Actions mới, Gradle tự
+        # sinh 1 debug.keystore ngẫu nhiên khác nhau -> mỗi build ký bằng key khác
+        # nhau -> Android từ chối cài "update" (phải gỡ app cũ mới cài được bản mới).
+        # Key cache CỐ ĐỊNH (không hash theo file gì) để mọi lần build đều dùng lại
+        # đúng 1 keystore, cài đè lên nhau bình thường như 1 app thật.
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-keystore-v1
+
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
