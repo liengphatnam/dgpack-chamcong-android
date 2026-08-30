@@ -11,16 +11,14 @@
     <path
         android:fillColor="#1B5E20"
         android:pathData="M54,37c-7.2,0 -13,5.8 -13,13c0,7.2 13,16 13,16s13,-8.8 13,-16C67,42.8 61.2,37 54,37z" />
-    <circle
+    <!-- VectorDrawable của Android không hỗ trợ thẻ <circle> (chỉ SVG mới có) — vẽ 2 mắt
+         bằng <path> với lệnh arc thay vì cx/cy/r. -->
+    <path
         android:fillColor="#FFFFFF"
-        android:cx="48"
-        android:cy="49"
-        android:r="2.4" />
-    <circle
+        android:pathData="M45.6,49a2.4,2.4 0 1,0 4.8,0a2.4,2.4 0 1,0 -4.8,0z" />
+    <path
         android:fillColor="#FFFFFF"
-        android:cx="60"
-        android:cy="49"
-        android:r="2.4" />
+        android:pathData="M57.6,49a2.4,2.4 0 1,0 4.8,0a2.4,2.4 0 1,0 -4.8,0z" />
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M47,57c1.8,2.2 4.2,3.4 7,3.4c2.8,0 5.2,-1.2 7,-3.4c0.4,-0.5 -0.3,-1.1 -0.8,-0.7c-1.6,1.6 -3.8,2.5 -6.2,2.5c-2.4,0 -4.6,-0.9 -6.2,-2.5C47.3,55.9 46.6,56.5 47,57z" />
