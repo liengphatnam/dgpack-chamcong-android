@@ -1,6 +1,7 @@
 package com.dgpack.chamcong.ui.queue
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,7 @@ import com.dgpack.chamcong.R
 import com.dgpack.chamcong.data.db.AttendanceEventEntity
 import com.dgpack.chamcong.data.db.SyncStatus
 import com.dgpack.chamcong.ui.appViewModel
+import com.dgpack.chamcong.util.TimeUtils
 
 @Composable
 fun QueueScreen(onBack: () -> Unit, onOpenEnroll: () -> Unit, onOpenSettings: () -> Unit) {
@@ -53,9 +55,10 @@ fun QueueScreen(onBack: () -> Unit, onOpenEnroll: () -> Unit, onOpenSettings: ()
 
             NetworkBadge(isOnline = state.isOnline)
 
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CountChip(stringResource(R.string.trang_thai_pending), state.counts.pending)
                 CountChip(stringResource(R.string.trang_thai_synced), state.counts.synced)
@@ -63,9 +66,13 @@ fun QueueScreen(onBack: () -> Unit, onOpenEnroll: () -> Unit, onOpenSettings: ()
                 CountChip(stringResource(R.string.trang_thai_failed), state.counts.failed)
             }
 
-            Row(
+            // FlowRow thay vì Row thường — ở màn hình dọc (portrait) hẹp, đủ 4 nút với
+            // nhãn tiếng Việt dài sẽ tràn ra ngoài và bị cắt mất (đã xảy ra thực tế:
+            // nút "Cài đặt" nằm cuối bị đẩy khuất khỏi màn hình). FlowRow tự xuống dòng.
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(onClick = viewModel::syncNow) { Text(stringResource(R.string.nut_dong_bo_ngay)) }
                 if (state.counts.unknownEmployee > 0) {
@@ -130,7 +137,9 @@ private fun EventRow(event: AttendanceEventEntity) {
     ) {
         Column {
             Text(text = event.employeeCode, style = MaterialTheme.typography.bodyLarge)
-            Text(text = event.eventTimeUtc + " (UTC)", style = MaterialTheme.typography.bodyMedium)
+            // Lưu/gửi server luôn là UTC (bắt buộc theo mục [5.2]) — chỉ hiển thị quy đổi
+            // sang giờ Việt Nam ở đây cho dễ đọc, không đổi giá trị gốc trong DB.
+            Text(text = TimeUtils.apiStringToVnDisplay(event.eventTimeUtc), style = MaterialTheme.typography.bodyMedium)
         }
         Text(text = statusLabel(event.syncStatus), style = MaterialTheme.typography.bodyLarge)
     }

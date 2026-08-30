@@ -50,4 +50,11 @@ class TimeUtilsTest {
         val apiString = TimeUtils.instantToApiString(Instant.parse("2026-08-30T01:00:00Z"))
         assertEquals(false, apiString.endsWith("Z"))
     }
+
+    @Test
+    fun `apiStringToVnDisplay quy doi dung sang gio Viet Nam de hien thi`() {
+        // 10h UTC lưu trong DB phải hiển thị cho người xem là 17h VN cùng ngày.
+        val display = TimeUtils.apiStringToVnDisplay("2026-08-30T10:00:00")
+        assertEquals("30/08/2026 17:00:00", display)
+    }
 }

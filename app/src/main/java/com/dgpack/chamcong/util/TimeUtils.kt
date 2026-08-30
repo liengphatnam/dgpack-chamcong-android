@@ -1,6 +1,7 @@
 package com.dgpack.chamcong.util
 
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -23,4 +24,15 @@ object TimeUtils {
     /** Dùng khi đọc lại eventTimeUtc đã lưu trong Room để parse thành Instant. */
     fun apiStringToInstant(value: String): Instant =
         Instant.parse(if (value.endsWith("Z")) value else "${value}Z")
+
+    private val VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh")
+    private val VN_DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+
+    /**
+     * CHỈ dùng để hiển thị cho người xem (mục [7]: UI tiếng Việt) — giá trị lưu trong Room
+     * và gửi lên server vẫn luôn là UTC, không đổi. Quy đổi hiển thị riêng để tránh nhầm
+     * lẫn "giờ không phải giờ Việt Nam" khi admin xem hàng đợi đồng bộ.
+     */
+    fun apiStringToVnDisplay(value: String): String =
+        apiStringToInstant(value).atZone(VN_ZONE).format(VN_DISPLAY_FORMATTER)
 }
