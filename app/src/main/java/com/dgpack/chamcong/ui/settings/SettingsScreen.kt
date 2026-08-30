@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.dgpack.chamcong.R
 import com.dgpack.chamcong.sync.LastSyncKind
@@ -88,6 +90,17 @@ fun SettingsScreen(onBack: () -> Unit) {
                 value = state.debounceMinutes,
                 onValueChange = viewModel::onDebounceChange,
                 label = { Text(stringResource(R.string.nguong_debounce_phut)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.adminPin,
+                onValueChange = viewModel::onAdminPinChange,
+                label = { Text(stringResource(R.string.ma_pin_quan_tri)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                isError = state.pinError,
+                supportingText = {
+                    if (state.pinError) Text(stringResource(R.string.loi_pin_khong_hop_le))
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 

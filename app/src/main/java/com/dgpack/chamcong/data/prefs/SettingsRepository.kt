@@ -14,7 +14,9 @@ data class AppSettings(
     // Đề xuất trong tài liệu: similarity >= 0.6 mới coi là nhận diện đúng.
     val similarityThreshold: Float = 0.6f,
     // Đề xuất trong tài liệu: chỉ ghi sự kiện mới nếu cách lần trước >= 5 phút.
-    val debounceMinutes: Int = 5
+    val debounceMinutes: Int = 5,
+    // Phase 2: PIN 4 số khoá màn hình quản trị (Enroll/Cài đặt/Hàng đợi). Rỗng = không khoá.
+    val adminPin: String = ""
 )
 
 /**
@@ -43,7 +45,8 @@ class SettingsRepository(context: Context) {
         apiKey = prefs.getString(KEY_API_KEY, null) ?: "",
         deviceCode = prefs.getString(KEY_DEVICE_CODE, null) ?: "",
         similarityThreshold = prefs.getFloat(KEY_SIMILARITY_THRESHOLD, AppSettings().similarityThreshold),
-        debounceMinutes = prefs.getInt(KEY_DEBOUNCE_MINUTES, AppSettings().debounceMinutes)
+        debounceMinutes = prefs.getInt(KEY_DEBOUNCE_MINUTES, AppSettings().debounceMinutes),
+        adminPin = prefs.getString(KEY_ADMIN_PIN, null) ?: ""
     )
 
     fun save(settings: AppSettings) {
@@ -53,6 +56,7 @@ class SettingsRepository(context: Context) {
             .putString(KEY_DEVICE_CODE, settings.deviceCode)
             .putFloat(KEY_SIMILARITY_THRESHOLD, settings.similarityThreshold)
             .putInt(KEY_DEBOUNCE_MINUTES, settings.debounceMinutes)
+            .putString(KEY_ADMIN_PIN, settings.adminPin)
             .apply()
         _settings.value = settings
     }
@@ -65,6 +69,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_DEVICE_CODE = "device_code"
         private const val KEY_SIMILARITY_THRESHOLD = "similarity_threshold"
         private const val KEY_DEBOUNCE_MINUTES = "debounce_minutes"
+        private const val KEY_ADMIN_PIN = "admin_pin"
 
         @Volatile
         private var instance: SettingsRepository? = null

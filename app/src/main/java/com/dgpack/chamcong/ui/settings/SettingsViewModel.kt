@@ -19,7 +19,9 @@ data class SettingsUiState(
     val deviceCode: String = "",
     val similarityThreshold: String = "",
     val debounceMinutes: String = "",
+    val adminPin: String = "",
     val savedOnce: Boolean = false,
+    val pinError: Boolean = false,
     val lastSync: LastSyncInfo = LastSyncInfo()
 )
 
@@ -46,6 +48,7 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
         deviceCode = settings.deviceCode,
         similarityThreshold = settings.similarityThreshold.toString(),
         debounceMinutes = settings.debounceMinutes.toString(),
+        adminPin = settings.adminPin,
         lastSync = lastSync
     )
 
@@ -54,15 +57,29 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
     fun onDeviceCodeChange(v: String) = _state.update { it.copy(deviceCode = v, savedOnce = false) }
     fun onSimilarityChange(v: String) = _state.update { it.copy(similarityThreshold = v, savedOnce = false) }
     fun onDebounceChange(v: String) = _state.update { it.copy(debounceMinutes = v, savedOnce = false) }
+    fun onAdminPinChange(v: String) {
+        // Chỉ nhận số, tối đa 4 ký tự — bàn phím số nên hiếm khi gõ ký tự khác nhưng lọc
+        // cho chắc (dán text chẳng hạn).
+        val digitsOnly = v.filter { it.isDigit() }.take(4)
+        _state.update { it.copy(adminPin = digitsOnly, savedOnce = false, pinError = false) }
+    }
 
     fun save() {
         val current = _state.value
+        // PIN phải rỗng (không khoá) hoặc đúng 4 số — không cho lưu PIN nửa chừng (1-3 số)
+        // vì sẽ không bao giờ khớp được lúc nhập ở PinEntryScreen.
+        if (current.adminPin.isNotEmpty() && current.adminPin.length != 4) {
+            _state.value = current.copy(pinError = true)
+            return
+        }
+
         val settings = AppSettings(
             serverUrl = current.serverUrl.trim(),
             apiKey = current.apiKey.trim(),
             deviceCode = current.deviceCode.trim(),
             similarityThreshold = current.similarityThreshold.toFloatOrNull()?.coerceIn(0f, 1f) ?: 0.6f,
-            debounceMinutes = current.debounceMinutes.toIntOrNull()?.coerceAtLeast(1) ?: 5
+            debounceMinutes = current.debounceMinutes.toIntOrNull()?.coerceAtLeast(1) ?: 5,
+            adminPin = current.adminPin
         )
         app.settingsRepository.save(settings)
         _state.value = toUiState(settings, current.lastSync).copy(savedOnce = true)

@@ -31,6 +31,12 @@
     <string name="nguong_debounce_phut">Ngưỡng chống trùng (phút)</string>
     <string name="nut_luu_cai_dat">Lưu cài đặt</string>
     <string name="da_luu_cai_dat">Đã lưu cài đặt</string>
+    <string name="ma_pin_quan_tri">Mã PIN khoá màn hình quản trị (4 số, để trống = không khoá)</string>
+    <string name="loi_pin_khong_hop_le">Mã PIN phải gồm đúng 4 chữ số, hoặc để trống để tắt khoá</string>
+
+    <!-- PIN -->
+    <string name="nhap_ma_pin">Nhập mã PIN quản trị</string>
+    <string name="ma_pin_sai">Sai mã PIN, vui lòng thử lại</string>
 
     <!-- Queue -->
     <string name="tieu_de_hang_doi">Hàng đợi đồng bộ</string>
