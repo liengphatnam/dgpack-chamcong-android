@@ -1,0 +1,18 @@
+# Android / Gradle
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Never commit real secrets (API keys, signing config) — see chamcongFaceID.md §6
+local.properties
+secrets.properties
