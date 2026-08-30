@@ -36,7 +36,13 @@ fun FaceCameraPreview(
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { ctx ->
-            val previewView = PreviewView(ctx)
+            val previewView = PreviewView(ctx).apply {
+                // Mặc định PreviewView dùng SurfaceView (chế độ PERFORMANCE), luôn vẽ đè lên
+                // trên MỌI composable khác trong cùng cửa sổ bất kể thứ tự khai báo trong Box
+                // — khiến overlay tên/nút cài đặt bị camera preview che mất hoàn toàn. Ép dùng
+                // TextureView (COMPATIBLE) để tham gia đúng thứ tự vẽ của Compose.
+                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            }
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
