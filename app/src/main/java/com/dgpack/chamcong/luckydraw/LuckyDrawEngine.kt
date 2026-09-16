@@ -44,7 +44,7 @@ data class LuckyDrawWin(
  * 1. Chỉ quay trong khoảng ngày cấu hình và chỉ ở **lần chấm công đầu tiên trong ngày** của
  *    mỗi người (1 người tối đa 1 lượt/ngày, không quay lại lúc về).
  * 2. **Sinh nhật** (trùng ngày-tháng với ngày VN hôm nay) → chắc chắn trúng **3 lon**, không
- *    tính vào quota 10 người/ngày.
+ *    tính vào quota 8 người/ngày.
  * 3. Còn lại quay ngẫu nhiên có trọng số [weightOf]:
  *    - không đi trễ/về sớm 30 ngày qua ×2; 1–2 lần ×1; từ 3 lần ×0.5,
  *    - mỗi lần được khen thưởng/phối hợp nội quy (Log ERP) +50%, tối đa 4 lần (×3),

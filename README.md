@@ -45,7 +45,7 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
   `erp_employee` (bản sao danh sách NV kéo từ ERP, kèm ngày sinh / số lần trễ-sớm / số lần khen thưởng),
   `lucky_draw_win` (sổ người trúng thưởng lon nước ngọt).
 - `luckydraw/LuckyDrawEngine.kt` + `LuckyDrawRepository.kt` — **chương trình trúng thưởng lon nước
-  ngọt tháng 8–9/2026**: mỗi ngày ~10 người quét mặt trúng 1 lon (quay có trọng số: không đi
+  ngọt tháng 8–9/2026**: mỗi ngày ~8 người quét mặt trúng 1 lon (quay có trọng số: không đi
   trễ/về sớm ×2, mỗi lần khen thưởng +50 %, đã trúng ×0.5), đúng sinh nhật chắc chắn 3 lon; chỉ quay
   ở lần chấm công đầu trong ngày. Trúng thì `ui/camera/FireworksOverlay.kt` bắn pháo hoa + đọc giọng
   nói "liên hệ phòng Nhân sự". Admin xem/đánh dấu đã phát ở màn *Sổ trúng thưởng*, chỉnh ngày đợt và

@@ -11,10 +11,10 @@ const val DEFAULT_MIN_CONFIDENCE_PERCENT = 80
 const val MIN_ALLOWED_CONFIDENCE_PERCENT = 50
 const val MAX_ALLOWED_CONFIDENCE_PERCENT = 100
 
-// Chương trình trúng thưởng lon nước ngọt: mặc định tháng 8–9/2026, 10 người/ngày/thiết bị.
+// Chương trình trúng thưởng lon nước ngọt: mặc định tháng 8–9/2026, 8 người/ngày/thiết bị.
 const val DEFAULT_LUCKY_DRAW_START = "2026-08-01"
 const val DEFAULT_LUCKY_DRAW_END = "2026-09-30"
-const val DEFAULT_LUCKY_DRAW_DAILY_QUOTA = 10
+const val DEFAULT_LUCKY_DRAW_DAILY_QUOTA = 8
 
 data class AppSettings(
     val serverUrl: String = "https://dgperp.azurewebsites.net",

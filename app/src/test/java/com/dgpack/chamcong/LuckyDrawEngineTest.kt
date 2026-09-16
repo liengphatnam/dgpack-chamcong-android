@@ -24,7 +24,7 @@ class LuckyDrawEngineTest {
         enabled = true,
         startDate = LocalDate.of(2026, 8, 1),
         endDate = LocalDate.of(2026, 9, 30),
-        dailyQuota = 10
+        dailyQuota = 8
     )
     private val aug20 = LocalDate.of(2026, 8, 20)
 
@@ -51,7 +51,7 @@ class LuckyDrawEngineTest {
     fun `sinh nhat thi chac chan trung 3 lon, khong tinh quota`() {
         val birthday = LuckyDrawCandidate("NV001", birthDate = "1990-08-20")
         // Quota đã hết vẫn trúng
-        val win = LuckyDrawEngine.draw(birthday, aug20, config, true, randomWinsToday = 10, pool(10), Random(1))
+        val win = LuckyDrawEngine.draw(birthday, aug20, config, true, randomWinsToday = 8, pool(10), Random(1))
         assertNotNull(win)
         assertEquals(3, win!!.cans)
         assertEquals(LuckyDrawReason.BIRTHDAY, win.reason)
@@ -59,7 +59,7 @@ class LuckyDrawEngineTest {
 
         // ERP trả kiểu .NET DateTime cũng nhận ra
         val dotNet = LuckyDrawCandidate("NV002", birthDate = "1985-08-20T00:00:00")
-        assertEquals(3, LuckyDrawEngine.draw(dotNet, aug20, config, true, 10, pool(10), Random(1))!!.cans)
+        assertEquals(3, LuckyDrawEngine.draw(dotNet, aug20, config, true, 8, pool(10), Random(1))!!.cans)
 
         // Sinh 29/02, năm 2026 không nhuận thi mừng 28/02
         assertTrue(LuckyDrawEngine.isBirthday("2000-02-29", LocalDate.of(2026, 2, 28)))
@@ -72,14 +72,14 @@ class LuckyDrawEngineTest {
     fun `het quota trong ngay thi khong trung nua`() {
         val c = LuckyDrawCandidate("NV001")
         repeat(200) { seed ->
-            assertNull(LuckyDrawEngine.draw(c, aug20, config, true, randomWinsToday = 10, listOf(c), Random(seed)))
+            assertNull(LuckyDrawEngine.draw(c, aug20, config, true, randomWinsToday = 8, listOf(c), Random(seed)))
         }
     }
 
     @Test
     fun `nguoi cuoi cung trong pool ma con quota thi chac chan trung`() {
         val c = LuckyDrawCandidate("NV001")
-        val win = LuckyDrawEngine.draw(c, aug20, config, true, randomWinsToday = 9, pool = listOf(c), Random(7))
+        val win = LuckyDrawEngine.draw(c, aug20, config, true, randomWinsToday = 7, pool = listOf(c), Random(7))
         assertNotNull(win)
         assertEquals(1, win!!.cans)
         assertEquals(LuckyDrawReason.RANDOM, win.reason)
@@ -101,7 +101,7 @@ class LuckyDrawEngineTest {
     }
 
     @Test
-    fun `mo phong 1 ngay 120 nguoi - khong bao gio vuot 10, trung binh xap xi 10`() {
+    fun `mo phong 1 ngay 120 nguoi - khong bao gio vuot 8, trung binh xap xi 8`() {
         val employees = List(120) { i ->
             LuckyDrawCandidate("NV%03d".format(i), lateEarlyCount30d = if (i % 3 == 0) 2 else 0, commendationCount = i % 5)
         }
@@ -117,11 +117,11 @@ class LuckyDrawEngineTest {
                 remainingPool.remove(e)
                 if (win != null) winsToday++
             }
-            assertTrue("ngày $day trúng $winsToday > quota", winsToday <= 10)
+            assertTrue("ngày $day trúng $winsToday > quota", winsToday <= 8)
             totalWins += winsToday
         }
         val avg = totalWins.toDouble() / days
-        assertTrue("trung bình $avg lệch xa 10", avg > 9.0 && avg <= 10.0)
+        assertTrue("trung bình $avg lệch xa 8", avg > 7.2 && avg <= 8.0)
     }
 
     @Test

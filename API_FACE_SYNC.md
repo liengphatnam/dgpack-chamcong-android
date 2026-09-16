@@ -98,18 +98,18 @@ Số lượng NV nhà máy cỡ vài trăm × ~2 KB/vector → không cần phâ
 ### Nghiệp vụ (chạy hoàn toàn trên tablet, ERP chỉ nhận kết quả)
 
 Chương trình **tháng 8–9/2026** (admin đổi được ngày bắt đầu/kết thúc và quota ở *Cài đặt*):
-mỗi ngày **10 người** quét mặt ngẫu nhiên trúng **1 lon nước ngọt**; trúng thì tablet bắn pháo hoa,
+mỗi ngày **8 người** quét mặt ngẫu nhiên trúng **1 lon nước ngọt**; trúng thì tablet bắn pháo hoa,
 đọc giọng nói chúc mừng và hướng dẫn *liên hệ phòng Nhân sự nhận thưởng*.
 
 Thuật toán (`luckydraw/LuckyDrawEngine.kt`, có unit test):
 
 1. Chỉ quay ở **lần chấm công đầu tiên trong ngày** (ngày VN) của mỗi người — 1 người tối đa 1 lượt/ngày.
-2. **Sinh nhật** (trùng ngày-tháng với hôm nay) → **chắc chắn trúng 3 lon**, không tính vào quota 10.
+2. **Sinh nhật** (trùng ngày-tháng với hôm nay) → **chắc chắn trúng 3 lon**, không tính vào quota 8.
 3. Còn lại quay ngẫu nhiên **có trọng số**:
    - không đi trễ/về sớm 30 ngày qua ×2 · 1–2 lần ×1 · từ 3 lần ×0.5,
    - mỗi lần được khen thưởng/phối hợp nội quy (Log) **+50 %**, tối đa 4 lần (×3),
    - mỗi lần đã trúng trong đợt ×0.5 (sàn 0.1) để lon nước lan đều ra nhiều người.
-4. Chọn đúng ~10 người/ngày dù không biết trước ai sẽ đi làm: *lấy mẫu tuần tự có trọng số*,
+4. Chọn đúng ~8 người/ngày dù không biết trước ai sẽ đi làm: *lấy mẫu tuần tự có trọng số*,
    mỗi lượt `p = min(1, quota_còn_lại × w / Σw(người dự kiến còn chấm công hôm nay))`. Pool "dự kiến"
    = ai đã chấm công trên máy này 14 ngày gần đây trừ người đã chấm hôm nay. Không bao giờ vượt quota;
    nếu cả pool đi làm thì kỳ vọng đúng bằng quota. Quota tính **riêng từng thiết bị**.
