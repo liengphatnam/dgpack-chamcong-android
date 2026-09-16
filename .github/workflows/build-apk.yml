@@ -23,6 +23,11 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Mặc định action chạy `sdkmanager tools`, nhưng gói 'tools' đã bị Google gỡ
+          # khỏi kho SDK (09/2026) nên bước này fail. Chỉ cài platform-tools, các
+          # thành phần còn lại (platforms, build-tools) Gradle/AGP tự tải khi build.
+          packages: platform-tools
 
       - name: Generate app/debug.keystore if missing
         # signingConfigs.debug trong app/build.gradle.kts trỏ cố định vào file này (thay
