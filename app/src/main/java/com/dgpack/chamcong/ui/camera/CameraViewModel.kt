@@ -1,9 +1,12 @@
 package com.dgpack.chamcong.ui.camera
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dgpack.chamcong.ChamCongApplication
 import com.dgpack.chamcong.camera.FaceDetectionResult
+import com.dgpack.chamcong.data.db.LuckyDrawReason
+import com.dgpack.chamcong.data.db.LuckyDrawWinEntity
 import com.dgpack.chamcong.data.prefs.AppSettings
 import com.dgpack.chamcong.face.FaceMatcher
 import com.dgpack.chamcong.face.MatchResult
@@ -23,9 +26,15 @@ import java.time.format.DateTimeFormatter
 private const val MAX_RECENT_SCANS = 5
 private const val LIVENESS_TIMEOUT_MS = 6000L
 private const val UNRECOGNIZED_HINT_MS = 1500L
+/** Pháo hoa + bảng chúc mừng trúng thưởng hiện bao lâu. */
+private const val CELEBRATION_MS = 12_000L
+private const val TAG = "CameraViewModel"
 private val TIME_LABEL_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss")
 
 data class RecentScan(val fullName: String, val timeLabel: String)
+
+/** Người vừa trúng thưởng lon nước ngọt — [seed] đổi mỗi lần để pháo hoa bắt đầu lại. */
+data class Celebration(val fullName: String, val cans: Int, val isBirthday: Boolean, val seed: Long)
 
 data class CameraUiState(
     val overlayName: String? = null,
@@ -38,7 +47,9 @@ data class CameraUiState(
      */
     val unrecognizedConfidence: Int? = null,
     val pendingCount: Int = 0,
-    val recentScans: List<RecentScan> = emptyList()
+    val recentScans: List<RecentScan> = emptyList(),
+    /** Khác null = đang bắn pháo hoa chúc mừng người trúng thưởng lon nước ngọt. */
+    val celebration: Celebration? = null
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,6 +60,7 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
 
     private var hideOverlayJob: Job? = null
     private var hideUnrecognizedJob: Job? = null
+    private var hideCelebrationJob: Job? = null
     private val voiceAnnouncer = VoiceAnnouncer(app)
 
     // Xử lý tuần tự trên đúng 1 luồng (limitedParallelism(1)) — tránh 2 frame liên tiếp
@@ -144,8 +156,38 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
             // Chỉ thêm vào danh sách gần nhất + đọc giọng nói khi THẬT SỰ ghi sự kiện
             // mới — tránh spam nếu 1 người đứng yên trước camera bị debounce chặn nhiều lần.
             addRecentScan(name)
-            voiceAnnouncer.speak("Chấm công thành công. Chào $name. Chúc bạn một ngày làm việc vui vẻ.")
+            // Quay thưởng lon nước ngọt (tháng 8–9/2026) — chỉ ở lần chấm công đầu trong ngày,
+            // xem LuckyDrawEngine. Lỗi ở đây không được làm hỏng luồng chấm công.
+            val win = try {
+                app.luckyDrawRepository.drawAfterCheckIn(employeeCode, name, settings)
+            } catch (e: Exception) {
+                Log.w(TAG, "Quay thưởng lỗi, bỏ qua", e)
+                null
+            }
+            if (win != null) {
+                showCelebration(name, win)
+            } else {
+                voiceAnnouncer.speak("Chấm công thành công. Chào $name. Chúc bạn một ngày làm việc vui vẻ.")
+            }
         }
+    }
+
+    private fun showCelebration(name: String, win: LuckyDrawWinEntity) {
+        val isBirthday = win.reason == LuckyDrawReason.BIRTHDAY
+        _uiState.value = _uiState.value.copy(
+            celebration = Celebration(name, win.cans, isBirthday, System.nanoTime())
+        )
+        hideCelebrationJob?.cancel()
+        hideCelebrationJob = viewModelScope.launch {
+            delay(CELEBRATION_MS)
+            _uiState.value = _uiState.value.copy(celebration = null)
+        }
+        val greeting = if (isBirthday) {
+            "Chúc mừng sinh nhật $name! Bạn được tặng ${win.cans} lon nước ngọt."
+        } else {
+            "Chúc mừng $name đã may mắn trúng thưởng ${win.cans} lon nước ngọt!"
+        }
+        voiceAnnouncer.speak("Chấm công thành công. $greeting Vui lòng liên hệ phòng nhân sự để nhận thưởng.")
     }
 
     private fun showOverlay(name: String, confidence: Int) {

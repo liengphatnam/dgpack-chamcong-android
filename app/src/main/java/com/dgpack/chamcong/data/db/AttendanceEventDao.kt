@@ -29,4 +29,21 @@ interface AttendanceEventDao {
 
     @Query("SELECT COUNT(*) FROM attendance_event_local WHERE syncStatus = :status")
     suspend fun countByStatus(status: String): Int
+
+    // ---- Phục vụ quay thưởng (LuckyDrawRepository). Mốc [fromUtc, toUtc) là chuỗi UTC
+    // cùng định dạng "yyyy-MM-ddTHH:mm:ss" nên so sánh chuỗi = so sánh thời gian. ----
+
+    /** Số sự kiện của 1 NV trong khoảng — = 1 nghĩa là lần chấm công đầu tiên trong ngày. */
+    @Query(
+        "SELECT COUNT(*) FROM attendance_event_local " +
+            "WHERE employeeCode = :employeeCode AND eventTimeUtc >= :fromUtc AND eventTimeUtc < :toUtc"
+    )
+    suspend fun countForEmployeeBetween(employeeCode: String, fromUtc: String, toUtc: String): Int
+
+    /** Mã NV đã từng chấm công trên máy này trong khoảng — ước lượng "ai sẽ còn chấm công hôm nay". */
+    @Query(
+        "SELECT DISTINCT employeeCode FROM attendance_event_local " +
+            "WHERE eventTimeUtc >= :fromUtc AND eventTimeUtc < :toUtc"
+    )
+    suspend fun distinctEmployeesBetween(fromUtc: String, toUtc: String): List<String>
 }

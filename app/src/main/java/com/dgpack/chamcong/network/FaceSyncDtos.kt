@@ -17,8 +17,47 @@ data class ErpEmployeeDto(
     /** Server đã có embedding cho NV này (bảng hr.EmployeeFaceEmbedding) hay chưa. */
     val hasFaceEmbedding: Boolean = false,
     /** ISO-8601 UTC, null nếu chưa có embedding. */
-    val faceUpdatedAt: String? = null
+    val faceUpdatedAt: String? = null,
+    // ---- Trường thêm cho chương trình trúng thưởng lon nước ngọt (API_FACE_SYNC.md mục 4).
+    // Server cũ không trả -> giữ mặc định, app vẫn quay thưởng nhưng mọi người trọng số bằng nhau
+    // và không ai được ưu tiên sinh nhật. ----
+    /** Ngày sinh "yyyy-MM-dd" (chấp nhận cả "yyyy-MM-ddT00:00:00" kiểu .NET DateTime). */
+    val birthDate: String? = null,
+    /** Số lần đi trễ/về sớm trong 30 ngày gần nhất (ERP tính từ hr.AttendanceEvent so với ca). */
+    val lateEarlyCount30d: Int = 0,
+    /** Số lần được khen thưởng / phối hợp nội quy ghi nhận trong Log ERP trong đợt. */
+    val commendationCount: Int = 0
 )
+
+/** POST api/v1/attendance/lucky-draws — 1 phần tử = 1 lần trúng thưởng trên thiết bị. */
+@Serializable
+data class LuckyDrawUploadRequest(
+    val employeeCode: String,
+    /** Ngày trúng theo giờ VN, "yyyy-MM-dd". */
+    val drawDate: String,
+    /** UTC "yyyy-MM-ddTHH:mm:ss". */
+    val wonAt: String,
+    val cans: Int,
+    /** "Random" | "Birthday" — xem LuckyDrawReason. */
+    val reason: String,
+    /** Xác suất 0..1 tại lúc quay, để HR đối chiếu. */
+    val chance: Double,
+    val deviceCode: String?
+)
+
+/** Response của POST lucky-draws, cùng thứ tự với request. */
+@Serializable
+data class LuckyDrawUploadResult(
+    val employeeCode: String,
+    val wonAt: String,
+    val status: String
+) {
+    companion object {
+        const val STATUS_SAVED = "Saved"
+        const val STATUS_DUPLICATE = "Duplicate"
+        const val STATUS_UNKNOWN_EMPLOYEE = "UnknownEmployee"
+    }
+}
 
 /** POST api/v1/attendance/face-embeddings — body là mảng, mỗi phần tử 1 NV. */
 @Serializable

@@ -2,12 +2,15 @@ package com.dgpack.chamcong.sync
 
 import com.dgpack.chamcong.data.db.EnrolledEmployeeEntity
 import com.dgpack.chamcong.data.db.ErpEmployeeEntity
+import com.dgpack.chamcong.data.db.SyncStatus
 import com.dgpack.chamcong.face.EmbeddingCodec
 import com.dgpack.chamcong.face.FaceEmbedder
 import com.dgpack.chamcong.network.AttendanceApi
 import com.dgpack.chamcong.network.FaceEmbeddingUploadRequest
 import com.dgpack.chamcong.network.FaceEmbeddingUploadResult
 import com.dgpack.chamcong.network.FaceModelInfo
+import com.dgpack.chamcong.network.LuckyDrawUploadRequest
+import com.dgpack.chamcong.network.LuckyDrawUploadResult
 import com.dgpack.chamcong.util.TimeUtils
 import retrofit2.Response
 import java.io.IOException
@@ -19,13 +22,15 @@ sealed class EmployeeSyncOutcome {
      * @param downloaded     số embedding tải về từ server (enroll ở máy khác)
      * @param unknownEmployee số embedding local có mã NV không tồn tại bên ERP
      * @param missingFace    số NV đang hoạt động bên ERP mà CHƯA có khuôn mặt ở đâu cả
+     * @param luckyDrawsUploaded số dòng sổ trúng thưởng vừa đẩy lên ERP (bước 4, phụ)
      */
     data class Completed(
         val employees: Int,
         val uploaded: Int,
         val downloaded: Int,
         val unknownEmployee: Int,
-        val missingFace: Int
+        val missingFace: Int,
+        val luckyDrawsUploaded: Int = 0
     ) : EmployeeSyncOutcome()
 
     /** Chưa nhập API key/DeviceCode ở Cài đặt — không gọi mạng. */
@@ -43,11 +48,16 @@ sealed class EmployeeSyncOutcome {
  *  1. Kéo danh sách dm.Employee về (để biết NV nào chưa có khuôn mặt).
  *  2. Đẩy embedding enroll ở máy này mà server chưa có / đã enroll lại sau lần đẩy trước.
  *  3. Tải embedding server đang giữ về (NV enroll ở tablet khác) để máy này cũng nhận diện được.
+ *  4. (phụ) Đẩy sổ trúng thưởng lon nước ngọt lên ERP để nhân sự phát thưởng — lỗi ở bước
+ *     này không ảnh hưởng kết quả 3 bước trên.
  *
  * Quy tắc xung đột: bản enroll CHƯA đẩy lên của máy này thắng (sẽ đẩy đè); ngoài ra bản
  * có mốc thời gian mới hơn thắng. Logic thuần, test bằng MockWebServer (EmployeeSyncEngineTest).
  */
-class EmployeeSyncEngine(private val source: EmployeeSyncSource) {
+class EmployeeSyncEngine(
+    private val source: EmployeeSyncSource,
+    private val luckyDrawSource: LuckyDrawSyncSource? = null
+) {
 
     suspend fun sync(
         api: AttendanceApi,
@@ -71,7 +81,11 @@ class EmployeeSyncEngine(private val source: EmployeeSyncSource) {
                 isActive = dto.isActive,
                 hasFaceOnServer = dto.hasFaceEmbedding,
                 faceUpdatedAt = dto.faceUpdatedAt,
-                syncedAt = now
+                syncedAt = now,
+                // .NET hay trả "1990-08-20T00:00:00" -> chỉ giữ phần ngày.
+                birthDate = dto.birthDate?.trim()?.take(10)?.takeIf { it.length == 10 },
+                lateEarlyCount30d = dto.lateEarlyCount30d,
+                commendationCount = dto.commendationCount
             )
         }
         source.replaceErpEmployees(erpEmployees)
@@ -145,6 +159,9 @@ class EmployeeSyncEngine(private val source: EmployeeSyncSource) {
             downloaded++
         }
 
+        // ---- 4. Đẩy sổ trúng thưởng lon nước ngọt lên ERP (phụ) ----
+        val luckyDrawsUploaded = uploadLuckyDraws(api, apiKey, deviceCode)
+
         // ---- Thống kê NV chưa có khuôn mặt ở đâu cả ----
         val enrolledCodes = source.getAllEnrolled().map { it.employeeCode }.toSet()
         val missingFace = erpEmployees.count { it.isActive && !it.hasFaceOnServer && it.employeeCode !in enrolledCodes }
@@ -154,8 +171,53 @@ class EmployeeSyncEngine(private val source: EmployeeSyncSource) {
             uploaded = uploaded,
             downloaded = downloaded,
             unknownEmployee = unknown,
-            missingFace = missingFace
+            missingFace = missingFace,
+            luckyDrawsUploaded = luckyDrawsUploaded
         )
+    }
+
+    /**
+     * Bước phụ: 404 (ERP chưa triển khai endpoint), mất mạng hay lỗi lạ đều giữ Pending và
+     * thử lại lần đồng bộ sau, KHÔNG làm hỏng kết quả 3 bước chính. Saved/Duplicate = xong;
+     * UnknownEmployee = mã không có bên ERP, đánh dấu để admin thấy trong sổ.
+     */
+    private suspend fun uploadLuckyDraws(api: AttendanceApi, apiKey: String, deviceCode: String): Int {
+        val draws = luckyDrawSource ?: return 0
+        val pending = draws.getPendingWins(LUCKY_DRAW_BATCH_SIZE)
+        if (pending.isEmpty()) return 0
+
+        val body = pending.map {
+            LuckyDrawUploadRequest(
+                employeeCode = it.employeeCode,
+                drawDate = it.drawDate,
+                wonAt = it.wonAtUtc,
+                cans = it.cans,
+                reason = it.reason,
+                chance = it.chance,
+                deviceCode = deviceCode
+            )
+        }
+        val response = try {
+            api.uploadLuckyDraws(apiKey, body)
+        } catch (e: IOException) {
+            return 0
+        }
+        if (response.code() != 200) return 0
+
+        val results = response.body().orEmpty()
+        var uploaded = 0
+        pending.forEachIndexed { index, win ->
+            when (results.getOrNull(index)?.status) {
+                LuckyDrawUploadResult.STATUS_SAVED, LuckyDrawUploadResult.STATUS_DUPLICATE -> {
+                    draws.markWinSynced(win.localId, SyncStatus.SYNCED)
+                    uploaded++
+                }
+                LuckyDrawUploadResult.STATUS_UNKNOWN_EMPLOYEE ->
+                    draws.markWinSynced(win.localId, SyncStatus.UNKNOWN_EMPLOYEE)
+                else -> Unit // để lại Pending, lần sau đẩy tiếp
+            }
+        }
+        return uploaded
     }
 
     private fun httpFailure(response: Response<*>): EmployeeSyncOutcome? = when (response.code()) {
@@ -168,6 +230,7 @@ class EmployeeSyncEngine(private val source: EmployeeSyncSource) {
 
     companion object {
         private const val UPLOAD_BATCH_SIZE = 50
+        private const val LUCKY_DRAW_BATCH_SIZE = 200
 
         /**
          * Chưa từng đẩy lên, hoặc đã enroll lại sau lần đẩy gần nhất. So sánh chuỗi ISO

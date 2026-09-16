@@ -1,6 +1,7 @@
 package com.dgpack.chamcong.util
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -25,7 +26,7 @@ object TimeUtils {
     fun apiStringToInstant(value: String): Instant =
         Instant.parse(if (value.endsWith("Z")) value else "${value}Z")
 
-    private val VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh")
+    val VN_ZONE: ZoneId = ZoneId.of("Asia/Ho_Chi_Minh")
     private val VN_DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
 
     /**
@@ -35,4 +36,19 @@ object TimeUtils {
      */
     fun apiStringToVnDisplay(value: String): String =
         apiStringToInstant(value).atZone(VN_ZONE).format(VN_DISPLAY_FORMATTER)
+
+    private val VN_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
+
+    fun apiStringToVnTime(value: String): String =
+        apiStringToInstant(value).atZone(VN_ZONE).format(VN_TIME_FORMATTER)
+
+    /**
+     * "Hôm nay" theo lịch Việt Nam — dùng cho quota trúng thưởng/ngày và so ngày sinh nhật
+     * (nghiệp vụ nhân sự tính theo ngày VN, khác với server tính "hôm nay" theo UTC).
+     */
+    fun vnToday(now: Instant = Instant.now()): LocalDate = now.atZone(VN_ZONE).toLocalDate()
+
+    /** 0h00 ngày [date] giờ VN quy ra chuỗi UTC — để so với eventTimeUtc trong Room. */
+    fun vnDayStartUtc(date: LocalDate): String =
+        instantToApiString(date.atStartOfDay(VN_ZONE).toInstant())
 }

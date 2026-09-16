@@ -40,7 +40,8 @@ fun QueueScreen(
     onBack: () -> Unit,
     onOpenEnroll: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEmployees: () -> Unit
+    onOpenEmployees: () -> Unit,
+    onOpenLuckyDraw: () -> Unit
 ) {
     val viewModel = appViewModel { QueueViewModel(it) }
     val state by viewModel.uiState.collectAsState()
@@ -94,6 +95,7 @@ fun QueueScreen(
                         else stringResource(R.string.tieu_de_nhan_vien)
                     )
                 }
+                OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
                 OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
             }
 

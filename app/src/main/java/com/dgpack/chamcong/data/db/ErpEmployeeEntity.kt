@@ -19,5 +19,12 @@ data class ErpEmployeeEntity(
     val hasFaceOnServer: Boolean,
     val faceUpdatedAt: String?,
     /** ISO-8601 UTC thời điểm kéo danh sách này về. */
-    val syncedAt: String
+    val syncedAt: String,
+    // ---- Dữ liệu cho chương trình trúng thưởng lon nước ngọt (LuckyDrawEngine) ----
+    /** Ngày sinh "yyyy-MM-dd" (null nếu ERP không có) — đúng ngày sinh nhật = chắc chắn trúng 3 lon. */
+    val birthDate: String? = null,
+    /** Số lần đi trễ/về sớm trong 30 ngày gần nhất (ERP tính) — 0 lần = trọng số x2. */
+    val lateEarlyCount30d: Int = 0,
+    /** Số lần được khen thưởng / phối hợp nội quy ghi trong Log ERP (trong đợt) — mỗi lần +50% trọng số. */
+    val commendationCount: Int = 0
 )

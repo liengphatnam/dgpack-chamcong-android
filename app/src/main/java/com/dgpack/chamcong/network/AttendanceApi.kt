@@ -39,4 +39,14 @@ interface AttendanceApi {
     suspend fun getFaceEmbeddings(
         @Header("X-Attendance-Api-Key") apiKey: String
     ): Response<List<FaceEmbeddingDownloadDto>>
+
+    /**
+     * Đẩy sổ người trúng thưởng lon nước ngọt lên ERP để nhân sự phát thưởng
+     * (API_FACE_SYNC.md mục 4). Server chưa có endpoint (404) -> app bỏ qua, giữ Pending.
+     */
+    @POST("api/v1/attendance/lucky-draws")
+    suspend fun uploadLuckyDraws(
+        @Header("X-Attendance-Api-Key") apiKey: String,
+        @Body draws: List<LuckyDrawUploadRequest>
+    ): Response<List<LuckyDrawUploadResult>>
 }

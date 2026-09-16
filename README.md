@@ -41,8 +41,16 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
 - `face/FaceMatcher.kt` — cosine similarity quy ra % độ tin cậy; **chỉ nhận diện khi
   ≥ ngưỡng "Độ tin cậy tối thiểu" ở Cài đặt (mặc định 80%)**, thấp hơn thì màn hình báo
   "Hệ thống chưa nhận dạng được (xx%)" và KHÔNG ghi sự kiện.
-- `data/db/` — Room (SQLite) v2: `enrolled_employee` (có `faceSyncedAt`), `attendance_event_local`,
-  `erp_employee` (bản sao danh sách NV kéo từ ERP).
+- `data/db/` — Room (SQLite) v3: `enrolled_employee` (có `faceSyncedAt`), `attendance_event_local`,
+  `erp_employee` (bản sao danh sách NV kéo từ ERP, kèm ngày sinh / số lần trễ-sớm / số lần khen thưởng),
+  `lucky_draw_win` (sổ người trúng thưởng lon nước ngọt).
+- `luckydraw/LuckyDrawEngine.kt` + `LuckyDrawRepository.kt` — **chương trình trúng thưởng lon nước
+  ngọt tháng 8–9/2026**: mỗi ngày ~10 người quét mặt trúng 1 lon (quay có trọng số: không đi
+  trễ/về sớm ×2, mỗi lần khen thưởng +50 %, đã trúng ×0.5), đúng sinh nhật chắc chắn 3 lon; chỉ quay
+  ở lần chấm công đầu trong ngày. Trúng thì `ui/camera/FireworksOverlay.kt` bắn pháo hoa + đọc giọng
+  nói "liên hệ phòng Nhân sự". Admin xem/đánh dấu đã phát ở màn *Sổ trúng thưởng*, chỉnh ngày đợt và
+  quota ở *Cài đặt*. Luật chi tiết + endpoint đẩy sổ lên ERP: mục 4 của
+  [`API_FACE_SYNC.md`](./API_FACE_SYNC.md).
 - `sync/SyncEngine.kt` — logic đồng bộ sự kiện thuần (test được bằng MockWebServer), tách khỏi
   `sync/SyncWorker.kt` (WorkManager).
 - `sync/EmployeeSyncEngine.kt` + `EmployeeSyncCoordinator.kt` — kéo danh sách NV từ ERP, đẩy/tải
@@ -57,7 +65,9 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
 
 - ~~Liveness detection (chống giả mạo ảnh/video).~~ Đã làm (chớp mắt).
 - ~~Khoá màn hình quản trị bằng PIN.~~ Đã làm.
-- Triển khai 3 endpoint `API_FACE_SYNC.md` phía DGP.ERP (app đã sẵn sàng).
+- Triển khai 3 endpoint `API_FACE_SYNC.md` phía DGP.ERP (app đã sẵn sàng) + 3 trường
+  `birthDate`/`lateEarlyCount30d`/`commendationCount` và endpoint `lucky-draws` (mục 4) cho
+  chương trình trúng thưởng — chưa có thì app vẫn quay nhưng không ưu tiên ai và không biết sinh nhật.
 - Nhận diện nhiều khuôn mặt cùng lúc trong 1 khung hình.
 - Ký APK bằng release keystore thật (hiện dùng debug build — xem mục [8.2]).
 - Test trên thiết bị Android thật (bắt buộc trước khi coi Phase 1 là "xong" — xem mục

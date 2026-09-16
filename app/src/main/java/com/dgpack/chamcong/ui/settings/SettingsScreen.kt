@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -103,6 +104,42 @@ fun SettingsScreen(onBack: () -> Unit) {
                 supportingText = {
                     if (state.pinError) Text(stringResource(R.string.loi_pin_khong_hop_le))
                 },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // ---- Chương trình trúng thưởng lon nước ngọt (tháng 8–9/2026) ----
+            Text(stringResource(R.string.ld_tieu_de_cai_dat), style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(stringResource(R.string.ld_bat), modifier = Modifier.weight(1f))
+                Switch(checked = state.luckyDrawEnabled, onCheckedChange = viewModel::onLuckyDrawEnabledChange)
+            }
+            OutlinedTextField(
+                value = state.luckyDrawStartDate,
+                onValueChange = viewModel::onLuckyDrawStartChange,
+                label = { Text(stringResource(R.string.ld_ngay_bat_dau)) },
+                isError = state.luckyDateError,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.luckyDrawEndDate,
+                onValueChange = viewModel::onLuckyDrawEndChange,
+                label = { Text(stringResource(R.string.ld_ngay_ket_thuc)) },
+                isError = state.luckyDateError,
+                supportingText = {
+                    if (state.luckyDateError) Text(stringResource(R.string.ld_loi_ngay))
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.luckyDrawDailyQuota,
+                onValueChange = viewModel::onLuckyDrawQuotaChange,
+                label = { Text(stringResource(R.string.ld_quota)) },
+                supportingText = { Text(stringResource(R.string.ld_quota_goi_y)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 

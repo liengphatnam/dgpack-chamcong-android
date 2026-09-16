@@ -78,6 +78,29 @@
     <string name="face_status_not_in_erp">Không có trong ERP</string>
     <string name="loi_url_server">Địa chỉ server không hợp lệ (phải bắt đầu bằng https://)</string>
 
+    <!-- Trúng thưởng lon nước ngọt (tháng 8–9/2026) -->
+    <string name="tieu_de_trung_thuong">Sổ trúng thưởng</string>
+    <string name="ld_chuc_mung">🎉 CHÚC MỪNG 🎉</string>
+    <string name="ld_chuc_mung_sinh_nhat">🎂 CHÚC MỪNG SINH NHẬT 🎂</string>
+    <string name="ld_trung_format">Bạn trúng thưởng %1$d lon nước ngọt!</string>
+    <string name="ld_lien_he_nhan_su">Vui lòng liên hệ phòng Nhân sự để nhận thưởng</string>
+    <string name="ld_tong_format">%1$d lượt trúng · %2$d lon · %3$d chưa phát</string>
+    <string name="ld_ngay_format">Ngày %1$s — %2$d lon, %3$d chưa phát</string>
+    <string name="ld_lon_format">%1$d lon</string>
+    <string name="ld_xac_suat_format">tỷ lệ %1$d%%</string>
+    <string name="ld_ly_do_sinh_nhat">Sinh nhật</string>
+    <string name="ld_ly_do_ngau_nhien">Ngẫu nhiên</string>
+    <string name="ld_da_phat">Đã phát ✓</string>
+    <string name="ld_chua_phat">Chưa phát</string>
+    <string name="ld_rong">Chưa có ai trúng thưởng</string>
+    <string name="ld_tieu_de_cai_dat">Chương trình trúng thưởng lon nước ngọt</string>
+    <string name="ld_bat">Quay thưởng khi chấm công</string>
+    <string name="ld_ngay_bat_dau">Ngày bắt đầu (yyyy-MM-dd)</string>
+    <string name="ld_ngay_ket_thuc">Ngày kết thúc (yyyy-MM-dd)</string>
+    <string name="ld_loi_ngay">Ngày không hợp lệ — dùng dạng yyyy-MM-dd (ví dụ 2026-08-01) và ngày bắt đầu phải trước ngày kết thúc</string>
+    <string name="ld_quota">Số người trúng ngẫu nhiên tối đa mỗi ngày</string>
+    <string name="ld_quota_goi_y">Mặc định 10, tính riêng trên thiết bị này. Sinh nhật luôn trúng 3 lon, không tính vào số này</string>
+
     <!-- Chung -->
     <string name="loi_api_key_sai">API key không đúng, vào Cài đặt kiểm tra lại</string>
     <string name="loi_mang">Lỗi kết nối mạng, sẽ tự thử lại</string>

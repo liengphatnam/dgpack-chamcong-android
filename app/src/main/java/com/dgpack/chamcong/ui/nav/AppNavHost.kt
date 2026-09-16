@@ -14,6 +14,7 @@ import com.dgpack.chamcong.ChamCongApplication
 import com.dgpack.chamcong.ui.camera.CameraScreen
 import com.dgpack.chamcong.ui.employees.EmployeesScreen
 import com.dgpack.chamcong.ui.enroll.EnrollScreen
+import com.dgpack.chamcong.ui.luckydraw.LuckyDrawScreen
 import com.dgpack.chamcong.ui.pin.PinEntryScreen
 import com.dgpack.chamcong.ui.queue.QueueScreen
 import com.dgpack.chamcong.ui.settings.SettingsScreen
@@ -28,6 +29,7 @@ private object Routes {
     const val ENROLL_PATTERN = "$ENROLL?$ENROLL_ARG_CODE={$ENROLL_ARG_CODE}&$ENROLL_ARG_NAME={$ENROLL_ARG_NAME}"
     const val SETTINGS = "settings"
     const val EMPLOYEES = "employees"
+    const val LUCKY_DRAW = "lucky_draw"
 
     /** Mở Enroll với mã + tên điền sẵn (từ màn Nhân viên ERP). Tên tiếng Việt cần encode. */
     fun enrollWith(code: String, name: String) =
@@ -74,8 +76,12 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onBack = { navController.popBackStack() },
                 onOpenEnroll = { navController.navigate(Routes.ENROLL) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                onOpenEmployees = { navController.navigate(Routes.EMPLOYEES) }
+                onOpenEmployees = { navController.navigate(Routes.EMPLOYEES) },
+                onOpenLuckyDraw = { navController.navigate(Routes.LUCKY_DRAW) }
             )
+        }
+        composable(Routes.LUCKY_DRAW) {
+            LuckyDrawScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.EMPLOYEES) {
             EmployeesScreen(

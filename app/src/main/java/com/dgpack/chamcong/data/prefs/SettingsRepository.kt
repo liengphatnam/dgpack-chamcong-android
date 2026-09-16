@@ -11,6 +11,11 @@ const val DEFAULT_MIN_CONFIDENCE_PERCENT = 80
 const val MIN_ALLOWED_CONFIDENCE_PERCENT = 50
 const val MAX_ALLOWED_CONFIDENCE_PERCENT = 100
 
+// Chương trình trúng thưởng lon nước ngọt: mặc định tháng 8–9/2026, 10 người/ngày/thiết bị.
+const val DEFAULT_LUCKY_DRAW_START = "2026-08-01"
+const val DEFAULT_LUCKY_DRAW_END = "2026-09-30"
+const val DEFAULT_LUCKY_DRAW_DAILY_QUOTA = 10
+
 data class AppSettings(
     val serverUrl: String = "https://dgperp.azurewebsites.net",
     val apiKey: String = "",
@@ -21,7 +26,14 @@ data class AppSettings(
     // Đề xuất trong tài liệu: chỉ ghi sự kiện mới nếu cách lần trước >= 5 phút.
     val debounceMinutes: Int = 5,
     // Phase 2: PIN 4 số khoá màn hình quản trị (Enroll/Cài đặt/Hàng đợi). Rỗng = không khoá.
-    val adminPin: String = ""
+    val adminPin: String = "",
+    // Quay thưởng lon nước ngọt khi chấm công (xem luckydraw/LuckyDrawEngine).
+    val luckyDrawEnabled: Boolean = true,
+    /** yyyy-MM-dd, theo ngày VN. */
+    val luckyDrawStartDate: String = DEFAULT_LUCKY_DRAW_START,
+    val luckyDrawEndDate: String = DEFAULT_LUCKY_DRAW_END,
+    /** Số người trúng ngẫu nhiên tối đa mỗi ngày trên thiết bị này (sinh nhật không tính). */
+    val luckyDrawDailyQuota: Int = DEFAULT_LUCKY_DRAW_DAILY_QUOTA
 )
 
 /**
@@ -51,7 +63,11 @@ class SettingsRepository(context: Context) {
         deviceCode = prefs.getString(KEY_DEVICE_CODE, null) ?: "",
         minConfidencePercent = prefs.getInt(KEY_MIN_CONFIDENCE_PERCENT, AppSettings().minConfidencePercent),
         debounceMinutes = prefs.getInt(KEY_DEBOUNCE_MINUTES, AppSettings().debounceMinutes),
-        adminPin = prefs.getString(KEY_ADMIN_PIN, null) ?: ""
+        adminPin = prefs.getString(KEY_ADMIN_PIN, null) ?: "",
+        luckyDrawEnabled = prefs.getBoolean(KEY_LUCKY_ENABLED, AppSettings().luckyDrawEnabled),
+        luckyDrawStartDate = prefs.getString(KEY_LUCKY_START, null) ?: DEFAULT_LUCKY_DRAW_START,
+        luckyDrawEndDate = prefs.getString(KEY_LUCKY_END, null) ?: DEFAULT_LUCKY_DRAW_END,
+        luckyDrawDailyQuota = prefs.getInt(KEY_LUCKY_QUOTA, DEFAULT_LUCKY_DRAW_DAILY_QUOTA)
     )
 
     fun save(settings: AppSettings) {
@@ -62,6 +78,10 @@ class SettingsRepository(context: Context) {
             .putInt(KEY_MIN_CONFIDENCE_PERCENT, settings.minConfidencePercent)
             .putInt(KEY_DEBOUNCE_MINUTES, settings.debounceMinutes)
             .putString(KEY_ADMIN_PIN, settings.adminPin)
+            .putBoolean(KEY_LUCKY_ENABLED, settings.luckyDrawEnabled)
+            .putString(KEY_LUCKY_START, settings.luckyDrawStartDate)
+            .putString(KEY_LUCKY_END, settings.luckyDrawEndDate)
+            .putInt(KEY_LUCKY_QUOTA, settings.luckyDrawDailyQuota)
             .apply()
         _settings.value = settings
     }
@@ -77,6 +97,10 @@ class SettingsRepository(context: Context) {
         private const val KEY_MIN_CONFIDENCE_PERCENT = "min_confidence_percent"
         private const val KEY_DEBOUNCE_MINUTES = "debounce_minutes"
         private const val KEY_ADMIN_PIN = "admin_pin"
+        private const val KEY_LUCKY_ENABLED = "lucky_draw_enabled"
+        private const val KEY_LUCKY_START = "lucky_draw_start"
+        private const val KEY_LUCKY_END = "lucky_draw_end"
+        private const val KEY_LUCKY_QUOTA = "lucky_draw_daily_quota"
 
         @Volatile
         private var instance: SettingsRepository? = null

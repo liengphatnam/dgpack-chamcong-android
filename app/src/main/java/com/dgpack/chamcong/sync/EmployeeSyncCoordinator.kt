@@ -54,7 +54,8 @@ class EmployeeSyncCoordinator(private val app: ChamCongApplication) {
             if (api == null) {
                 EmployeeSyncOutcome.NetworkError(app.getString(com.dgpack.chamcong.R.string.loi_url_server))
             } else {
-                EmployeeSyncEngine(app.employeeRepository).sync(api, settings.apiKey, settings.deviceCode)
+                EmployeeSyncEngine(app.employeeRepository, app.luckyDrawRepository)
+                    .sync(api, settings.apiKey, settings.deviceCode)
             }
         }
 

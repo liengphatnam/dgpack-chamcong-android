@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.core.content.ContextCompat
@@ -75,6 +76,50 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                     Text(
                         text = "Ứng dụng cần quyền Camera để nhận diện khuôn mặt chấm công.",
                         style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+
+        // Trúng thưởng lon nước ngọt (tháng 8–9/2026): pháo hoa toàn màn hình + bảng chúc mừng
+        // giữa màn, hướng dẫn liên hệ nhân sự. Đặt TRƯỚC các nút để nút quản trị vẫn bấm được.
+        uiState.celebration?.let { celebration ->
+            FireworksOverlay(seed = celebration.seed, modifier = Modifier.fillMaxSize())
+            Surface(
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.align(Alignment.Center).padding(24.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (celebration.isBirthday) R.string.ld_chuc_mung_sinh_nhat else R.string.ld_chuc_mung
+                        ),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = celebration.fullName,
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(R.string.ld_trung_format, celebration.cans),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(R.string.ld_lien_he_nhan_su),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center
                     )
                 }
             }

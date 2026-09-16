@@ -6,6 +6,7 @@ import com.dgpack.chamcong.data.prefs.SettingsRepository
 import com.dgpack.chamcong.data.repository.AttendanceRepository
 import com.dgpack.chamcong.data.repository.EmployeeRepository
 import com.dgpack.chamcong.face.FaceEmbedder
+import com.dgpack.chamcong.luckydraw.LuckyDrawRepository
 import com.dgpack.chamcong.sync.EmployeeSyncCoordinator
 import com.dgpack.chamcong.sync.SyncManager
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,16 @@ class ChamCongApplication : Application() {
         EmployeeRepository(database.enrolledEmployeeDao(), database.erpEmployeeDao(), database)
     }
     val attendanceRepository: AttendanceRepository by lazy { AttendanceRepository(database.attendanceEventDao()) }
+
+    // Quay thưởng lon nước ngọt sau mỗi lần chấm công (tháng 8–9/2026) + sổ người trúng.
+    val luckyDrawRepository: LuckyDrawRepository by lazy {
+        LuckyDrawRepository(
+            winDao = database.luckyDrawWinDao(),
+            attendanceDao = database.attendanceEventDao(),
+            erpDao = database.erpEmployeeDao(),
+            enrolledDao = database.enrolledEmployeeDao()
+        )
+    }
 
     // Đồng bộ danh sách NV + embedding với ERP (API_FACE_SYNC.md) — trạng thái chia sẻ cho UI.
     val employeeSyncCoordinator: EmployeeSyncCoordinator by lazy { EmployeeSyncCoordinator(this) }
