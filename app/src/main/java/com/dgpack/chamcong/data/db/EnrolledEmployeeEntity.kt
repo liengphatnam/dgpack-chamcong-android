@@ -14,7 +14,12 @@ data class EnrolledEmployeeEntity(
     val fullName: String,
     val embedding: ByteArray,
     val enrolledAt: String,
-    val photoSample: ByteArray?
+    val photoSample: ByteArray?,
+    /**
+     * Mốc (= enrolledAt) mà server đã nhận embedding này — null = chưa đẩy lên bao giờ.
+     * Enroll lại (upsert) sẽ reset về null để lần đồng bộ tới đẩy bản mới (xem EmployeeSyncEngine.needsUpload).
+     */
+    val faceSyncedAt: String? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -23,6 +28,7 @@ data class EnrolledEmployeeEntity(
             fullName == other.fullName &&
             embedding.contentEquals(other.embedding) &&
             enrolledAt == other.enrolledAt &&
+            faceSyncedAt == other.faceSyncedAt &&
             (photoSample?.contentEquals(other.photoSample ?: ByteArray(0)) ?: (other.photoSample == null))
     }
 
@@ -32,6 +38,7 @@ data class EnrolledEmployeeEntity(
         result = 31 * result + embedding.contentHashCode()
         result = 31 * result + enrolledAt.hashCode()
         result = 31 * result + (photoSample?.contentHashCode() ?: 0)
+        result = 31 * result + (faceSyncedAt?.hashCode() ?: 0)
         return result
     }
 }

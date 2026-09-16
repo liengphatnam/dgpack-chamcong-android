@@ -81,9 +81,11 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = state.similarityThreshold,
-                onValueChange = viewModel::onSimilarityChange,
-                label = { Text(stringResource(R.string.nguong_similarity)) },
+                value = state.minConfidencePercent,
+                onValueChange = viewModel::onMinConfidenceChange,
+                label = { Text(stringResource(R.string.nguong_do_tin_cay)) },
+                supportingText = { Text(stringResource(R.string.nguong_do_tin_cay_goi_y)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(

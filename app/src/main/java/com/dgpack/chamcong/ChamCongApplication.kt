@@ -6,6 +6,7 @@ import com.dgpack.chamcong.data.prefs.SettingsRepository
 import com.dgpack.chamcong.data.repository.AttendanceRepository
 import com.dgpack.chamcong.data.repository.EmployeeRepository
 import com.dgpack.chamcong.face.FaceEmbedder
+import com.dgpack.chamcong.sync.EmployeeSyncCoordinator
 import com.dgpack.chamcong.sync.SyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,8 +24,13 @@ class ChamCongApplication : Application() {
 
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository.getInstance(this) }
-    val employeeRepository: EmployeeRepository by lazy { EmployeeRepository(database.enrolledEmployeeDao()) }
+    val employeeRepository: EmployeeRepository by lazy {
+        EmployeeRepository(database.enrolledEmployeeDao(), database.erpEmployeeDao(), database)
+    }
     val attendanceRepository: AttendanceRepository by lazy { AttendanceRepository(database.attendanceEventDao()) }
+
+    // Đồng bộ danh sách NV + embedding với ERP (API_FACE_SYNC.md) — trạng thái chia sẻ cho UI.
+    val employeeSyncCoordinator: EmployeeSyncCoordinator by lazy { EmployeeSyncCoordinator(this) }
 
     // Nặng (nạp model TFLite) — chỉ khởi tạo khi thực sự cần (lúc mở màn hình Camera/Enroll).
     val faceEmbedder: FaceEmbedder by lazy { FaceEmbedder(this) }

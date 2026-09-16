@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dgpack.chamcong.ChamCongApplication
 import com.dgpack.chamcong.data.prefs.AppSettings
+import com.dgpack.chamcong.data.prefs.DEFAULT_MIN_CONFIDENCE_PERCENT
+import com.dgpack.chamcong.data.prefs.MAX_ALLOWED_CONFIDENCE_PERCENT
+import com.dgpack.chamcong.data.prefs.MIN_ALLOWED_CONFIDENCE_PERCENT
 import com.dgpack.chamcong.sync.LastSyncInfo
 import com.dgpack.chamcong.sync.SyncStatusHolder
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +20,7 @@ data class SettingsUiState(
     val serverUrl: String = "",
     val apiKey: String = "",
     val deviceCode: String = "",
-    val similarityThreshold: String = "",
+    val minConfidencePercent: String = "",
     val debounceMinutes: String = "",
     val adminPin: String = "",
     val savedOnce: Boolean = false,
@@ -46,7 +49,7 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
         serverUrl = settings.serverUrl,
         apiKey = settings.apiKey,
         deviceCode = settings.deviceCode,
-        similarityThreshold = settings.similarityThreshold.toString(),
+        minConfidencePercent = settings.minConfidencePercent.toString(),
         debounceMinutes = settings.debounceMinutes.toString(),
         adminPin = settings.adminPin,
         lastSync = lastSync
@@ -55,7 +58,7 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
     fun onServerUrlChange(v: String) = _state.update { it.copy(serverUrl = v, savedOnce = false) }
     fun onApiKeyChange(v: String) = _state.update { it.copy(apiKey = v, savedOnce = false) }
     fun onDeviceCodeChange(v: String) = _state.update { it.copy(deviceCode = v, savedOnce = false) }
-    fun onSimilarityChange(v: String) = _state.update { it.copy(similarityThreshold = v, savedOnce = false) }
+    fun onMinConfidenceChange(v: String) = _state.update { it.copy(minConfidencePercent = v.filter { c -> c.isDigit() }.take(3), savedOnce = false) }
     fun onDebounceChange(v: String) = _state.update { it.copy(debounceMinutes = v, savedOnce = false) }
     fun onAdminPinChange(v: String) {
         // Chỉ nhận số, tối đa 4 ký tự — bàn phím số nên hiếm khi gõ ký tự khác nhưng lọc
@@ -77,7 +80,10 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
             serverUrl = current.serverUrl.trim(),
             apiKey = current.apiKey.trim(),
             deviceCode = current.deviceCode.trim(),
-            similarityThreshold = current.similarityThreshold.toFloatOrNull()?.coerceIn(0f, 1f) ?: 0.6f,
+            // Không cho hạ dưới 50% — thấp hơn nữa gần như chắc chắn nhận nhầm người.
+            minConfidencePercent = current.minConfidencePercent.toIntOrNull()
+                ?.coerceIn(MIN_ALLOWED_CONFIDENCE_PERCENT, MAX_ALLOWED_CONFIDENCE_PERCENT)
+                ?: DEFAULT_MIN_CONFIDENCE_PERCENT,
             debounceMinutes = current.debounceMinutes.toIntOrNull()?.coerceAtLeast(1) ?: 5,
             adminPin = current.adminPin
         )

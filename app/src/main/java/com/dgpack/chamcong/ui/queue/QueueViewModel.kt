@@ -18,7 +18,9 @@ data class QueueUiState(
     val counts: QueueCounts = QueueCounts(),
     val events: List<AttendanceEventEntity> = emptyList(),
     val enrolledEmployees: List<EnrolledEmployeeEntity> = emptyList(),
-    val isOnline: Boolean = false
+    val isOnline: Boolean = false,
+    /** NV đang hoạt động bên ERP chưa có khuôn mặt ở máy này lẫn trên server (0 nếu chưa kéo danh sách). */
+    val missingFaceCount: Int = 0
 )
 
 class QueueViewModel(private val app: ChamCongApplication) : ViewModel() {
@@ -27,9 +29,12 @@ class QueueViewModel(private val app: ChamCongApplication) : ViewModel() {
         app.attendanceRepository.observeCounts(),
         app.attendanceRepository.observeAll(),
         app.employeeRepository.observeAll(),
-        NetworkMonitor.observe(app)
-    ) { counts, events, employees, online ->
-        QueueUiState(counts, events, employees, online)
+        NetworkMonitor.observe(app),
+        app.employeeRepository.observeErpEmployees()
+    ) { counts, events, employees, online, erpEmployees ->
+        val enrolledCodes = employees.map { it.employeeCode }.toSet()
+        val missing = erpEmployees.count { it.isActive && !it.hasFaceOnServer && it.employeeCode !in enrolledCodes }
+        QueueUiState(counts, events, employees, online, missing)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QueueUiState())
 
     fun syncNow() {

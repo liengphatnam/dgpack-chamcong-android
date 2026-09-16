@@ -8,6 +8,8 @@
     <string name="cho_dong_bo_format">%1$d sự kiện đang chờ đồng bộ</string>
     <string name="vua_cham_cong">Vừa chấm công</string>
     <string name="goi_y_chop_mat_format">Xin chào %1$s! Vui lòng chớp mắt để xác nhận</string>
+    <string name="chua_nhan_dang_duoc_format">Hệ thống chưa nhận dạng được (%1$d%%)</string>
+    <string name="do_tin_cay_format">Độ tin cậy %1$d%%</string>
 
     <!-- Enroll -->
     <string name="tieu_de_enroll">Đăng ký khuôn mặt nhân viên</string>
@@ -28,7 +30,8 @@
     <string name="url_server">Địa chỉ server ERP</string>
     <string name="api_key">API Key</string>
     <string name="ma_thiet_bi">Mã thiết bị (DeviceCode)</string>
-    <string name="nguong_similarity">Ngưỡng nhận diện (0.0 – 1.0)</string>
+    <string name="nguong_do_tin_cay" formatted="false">Độ tin cậy nhận diện tối thiểu (%)</string>
+    <string name="nguong_do_tin_cay_goi_y">Mặc định 80. Thấp hơn ngưỡng này máy báo \"chưa nhận dạng được\" và không ghi công</string>
     <string name="nguong_debounce_phut">Ngưỡng chống trùng (phút)</string>
     <string name="nut_luu_cai_dat">Lưu cài đặt</string>
     <string name="da_luu_cai_dat">Đã lưu cài đặt</string>
@@ -51,6 +54,29 @@
     <string name="trang_thai_failed">Lỗi</string>
     <string name="canh_bao_unknown_employee">Có mã nhân viên chưa tồn tại trong ERP — vào trang \"Danh mục nhân viên\" của ERP để tạo trước, sau đó bấm \"Thử lại\"</string>
     <string name="danh_sach_da_enroll">Danh sách đã đăng ký</string>
+    <string name="nut_nhan_vien_format">Nhân viên ERP (%1$d chưa có mặt)</string>
+
+    <!-- Nhân viên ERP / đồng bộ embedding (API_FACE_SYNC.md) -->
+    <string name="tieu_de_nhan_vien">Nhân viên ERP</string>
+    <string name="nut_dong_bo_nhan_vien">Đồng bộ nhân viên &amp; khuôn mặt</string>
+    <string name="loc_chua_co_khuon_mat_format">Chưa có khuôn mặt (%1$d)</string>
+    <string name="loc_tat_ca_format">Tất cả (%1$d)</string>
+    <string name="nv_bam_de_dang_ky">Chạm vào một nhân viên để đăng ký khuôn mặt</string>
+    <string name="nv_chua_dong_bo">Chưa kéo được danh sách nhân viên từ ERP — cần mạng và API key đúng, bấm \"Đồng bộ\"</string>
+    <string name="nv_danh_sach_rong">Không có nhân viên nào trong bộ lọc này</string>
+    <string name="nv_sync_running">Đang đồng bộ nhân viên và khuôn mặt với ERP…</string>
+    <string name="nv_sync_done_format">Đồng bộ xong: %1$d nhân viên, tải lên %2$d, tải về %3$d, còn %4$d chưa có khuôn mặt</string>
+    <string name="nv_sync_unknown_format">%1$d mã đã đăng ký trên máy không tồn tại trong ERP</string>
+    <string name="nv_sync_not_configured">Chưa nhập API key / mã thiết bị ở Cài đặt</string>
+    <string name="nv_sync_server_misconfigured">Server chưa cấu hình API key đồng bộ (503), thử lại sau</string>
+    <string name="nv_sync_endpoint_missing">Server ERP chưa có API đồng bộ nhân viên (404) — cần triển khai phía DGP.ERP (xem API_FACE_SYNC.md)</string>
+    <string name="nv_sync_unexpected_format">Lỗi server khi đồng bộ nhân viên (HTTP %1$d)</string>
+    <string name="face_status_missing">Chưa có khuôn mặt</string>
+    <string name="face_status_local_pending">Đã đăng ký, chờ tải lên</string>
+    <string name="face_status_local_synced">Đã đồng bộ</string>
+    <string name="face_status_server_only">Có trên server, sẽ tải về</string>
+    <string name="face_status_not_in_erp">Không có trong ERP</string>
+    <string name="loi_url_server">Địa chỉ server không hợp lệ (phải bắt đầu bằng https://)</string>
 
     <!-- Chung -->
     <string name="loi_api_key_sai">API key không đúng, vào Cài đặt kiểm tra lại</string>

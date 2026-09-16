@@ -36,7 +36,12 @@ import com.dgpack.chamcong.ui.appViewModel
 import com.dgpack.chamcong.util.TimeUtils
 
 @Composable
-fun QueueScreen(onBack: () -> Unit, onOpenEnroll: () -> Unit, onOpenSettings: () -> Unit) {
+fun QueueScreen(
+    onBack: () -> Unit,
+    onOpenEnroll: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenEmployees: () -> Unit
+) {
     val viewModel = appViewModel { QueueViewModel(it) }
     val state by viewModel.uiState.collectAsState()
 
@@ -83,6 +88,12 @@ fun QueueScreen(onBack: () -> Unit, onOpenEnroll: () -> Unit, onOpenSettings: ()
                     }
                 }
                 OutlinedButton(onClick = onOpenEnroll) { Text(stringResource(R.string.tieu_de_enroll)) }
+                OutlinedButton(onClick = onOpenEmployees) {
+                    Text(
+                        if (state.missingFaceCount > 0) stringResource(R.string.nut_nhan_vien_format, state.missingFaceCount)
+                        else stringResource(R.string.tieu_de_nhan_vien)
+                    )
+                }
                 OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
             }
 

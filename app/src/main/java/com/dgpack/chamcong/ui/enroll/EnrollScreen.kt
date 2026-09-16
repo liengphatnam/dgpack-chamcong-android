@@ -39,10 +39,14 @@ import com.dgpack.chamcong.ui.appViewModel
 import com.dgpack.chamcong.ui.camera.FaceCameraPreview
 
 @Composable
-fun EnrollScreen(onBack: () -> Unit) {
+fun EnrollScreen(onBack: () -> Unit, prefillCode: String = "", prefillName: String = "") {
     val context = LocalContext.current
     val viewModel = appViewModel { EnrollViewModel(it) }
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(prefillCode, prefillName) {
+        viewModel.prefill(prefillCode, prefillName)
+    }
 
     var hasCameraPermission by remember {
         mutableStateOf(

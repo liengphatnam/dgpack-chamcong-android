@@ -1,8 +1,21 @@
 package com.dgpack.chamcong.face
 
+import kotlin.math.roundToInt
+
 data class EnrolledFace(val employeeCode: String, val embedding: FloatArray)
 
-data class MatchResult(val employeeCode: String, val similarity: Float)
+/**
+ * Kết quả so khớp: người có similarity cao nhất trong danh sách enroll.
+ * [confidencePercent] là similarity quy đổi sang thang 0–100% để hiển thị cho người
+ * dùng và so với ngưỡng "độ tin cậy tối thiểu" cấu hình ở Cài đặt (mặc định 80%).
+ */
+data class MatchResult(val employeeCode: String, val similarity: Float) {
+    val confidencePercent: Int
+        get() = FaceMatcher.toConfidencePercent(similarity)
+
+    /** Quy tắc nghiệp vụ: chỉ coi là nhận diện ĐƯỢC khi độ tin cậy >= [minPercent]. */
+    fun isConfident(minPercent: Int): Boolean = confidencePercent >= minPercent
+}
 
 /**
  * So khớp embedding truy vấn với toàn bộ danh sách đã enroll bằng cosine similarity
@@ -28,14 +41,20 @@ object FaceMatcher {
     }
 
     /**
-     * Trả về mã NV có similarity cao nhất VÀ vượt ngưỡng [threshold], hoặc null nếu
-     * không ai đạt ngưỡng (bình thường — người đi ngang không phải để chấm công).
+     * Quy đổi cosine similarity (-1..1) sang % độ tin cậy (0..100). Similarity âm coi
+     * như 0% — về nghiệp vụ không có "tin cậy âm". Đây là thang tuyến tính đơn giản,
+     * đủ để admin cấu hình và đọc hiểu; ngưỡng mặc định 80% ~ similarity 0.80.
      */
-    fun findBestMatch(
-        query: FloatArray,
-        enrolled: List<EnrolledFace>,
-        threshold: Float
-    ): MatchResult? {
+    fun toConfidencePercent(similarity: Float): Int =
+        (similarity.coerceIn(0f, 1f) * 100f).roundToInt()
+
+    /**
+     * Trả về người có similarity cao nhất (KHÔNG áp ngưỡng), hoặc null nếu chưa enroll ai.
+     * Caller tự kiểm tra [MatchResult.isConfident] để quyết định nhận diện được hay
+     * chưa — tách ra như vậy để UI có thể hiện "chưa nhận dạng được (xx%)" khi chưa đủ
+     * độ tin cậy thay vì im lặng.
+     */
+    fun findBestMatch(query: FloatArray, enrolled: List<EnrolledFace>): MatchResult? {
         var best: MatchResult? = null
         for (candidate in enrolled) {
             val sim = cosineSimilarity(query, candidate.embedding)
@@ -43,8 +62,18 @@ object FaceMatcher {
                 best = MatchResult(candidate.employeeCode, sim)
             }
         }
-        return best?.takeIf { it.similarity >= threshold }
+        return best
     }
+
+    /**
+     * Phiên bản có ngưỡng similarity thô (0..1): trả về null nếu không ai đạt ngưỡng.
+     * Giữ lại cho test/tương thích; luồng chấm công dùng [findBestMatch] + [MatchResult.isConfident].
+     */
+    fun findBestMatch(
+        query: FloatArray,
+        enrolled: List<EnrolledFace>,
+        threshold: Float
+    ): MatchResult? = findBestMatch(query, enrolled)?.takeIf { it.similarity >= threshold }
 
     /** Trung bình nhiều embedding (từ 3-5 ảnh enroll) rồi re-normalize (mục [4.2]). */
     fun averageEmbedding(embeddings: List<FloatArray>): FloatArray {

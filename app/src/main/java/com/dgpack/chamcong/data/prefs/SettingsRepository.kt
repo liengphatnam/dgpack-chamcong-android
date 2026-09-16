@@ -7,12 +7,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+const val DEFAULT_MIN_CONFIDENCE_PERCENT = 80
+const val MIN_ALLOWED_CONFIDENCE_PERCENT = 50
+const val MAX_ALLOWED_CONFIDENCE_PERCENT = 100
+
 data class AppSettings(
     val serverUrl: String = "https://dgperp.azurewebsites.net",
     val apiKey: String = "",
     val deviceCode: String = "",
-    // Đề xuất trong tài liệu: similarity >= 0.6 mới coi là nhận diện đúng.
-    val similarityThreshold: Float = 0.6f,
+    // Quy tắc nghiệp vụ: độ tin cậy (cosine similarity quy ra %) phải >= 80% mới coi là
+    // nhận diện được; thấp hơn thì hiện "Hệ thống chưa nhận dạng được" và KHÔNG ghi sự kiện.
+    val minConfidencePercent: Int = DEFAULT_MIN_CONFIDENCE_PERCENT,
     // Đề xuất trong tài liệu: chỉ ghi sự kiện mới nếu cách lần trước >= 5 phút.
     val debounceMinutes: Int = 5,
     // Phase 2: PIN 4 số khoá màn hình quản trị (Enroll/Cài đặt/Hàng đợi). Rỗng = không khoá.
@@ -44,7 +49,7 @@ class SettingsRepository(context: Context) {
         serverUrl = prefs.getString(KEY_SERVER_URL, null) ?: AppSettings().serverUrl,
         apiKey = prefs.getString(KEY_API_KEY, null) ?: "",
         deviceCode = prefs.getString(KEY_DEVICE_CODE, null) ?: "",
-        similarityThreshold = prefs.getFloat(KEY_SIMILARITY_THRESHOLD, AppSettings().similarityThreshold),
+        minConfidencePercent = prefs.getInt(KEY_MIN_CONFIDENCE_PERCENT, AppSettings().minConfidencePercent),
         debounceMinutes = prefs.getInt(KEY_DEBOUNCE_MINUTES, AppSettings().debounceMinutes),
         adminPin = prefs.getString(KEY_ADMIN_PIN, null) ?: ""
     )
@@ -54,7 +59,7 @@ class SettingsRepository(context: Context) {
             .putString(KEY_SERVER_URL, settings.serverUrl)
             .putString(KEY_API_KEY, settings.apiKey)
             .putString(KEY_DEVICE_CODE, settings.deviceCode)
-            .putFloat(KEY_SIMILARITY_THRESHOLD, settings.similarityThreshold)
+            .putInt(KEY_MIN_CONFIDENCE_PERCENT, settings.minConfidencePercent)
             .putInt(KEY_DEBOUNCE_MINUTES, settings.debounceMinutes)
             .putString(KEY_ADMIN_PIN, settings.adminPin)
             .apply()
@@ -67,7 +72,9 @@ class SettingsRepository(context: Context) {
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_API_KEY = "api_key"
         private const val KEY_DEVICE_CODE = "device_code"
-        private const val KEY_SIMILARITY_THRESHOLD = "similarity_threshold"
+        // Key mới, tách khỏi "similarity_threshold" (float 0..1) của bản cũ để máy đã cài
+        // bản cũ tự nhận mặc định 80% thay vì kế thừa ngưỡng 0.6 quá lỏng.
+        private const val KEY_MIN_CONFIDENCE_PERCENT = "min_confidence_percent"
         private const val KEY_DEBOUNCE_MINUTES = "debounce_minutes"
         private const val KEY_ADMIN_PIN = "admin_pin"
 

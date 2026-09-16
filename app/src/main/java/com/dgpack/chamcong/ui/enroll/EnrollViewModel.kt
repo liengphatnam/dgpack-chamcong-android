@@ -35,6 +35,18 @@ class EnrollViewModel(private val app: ChamCongApplication) : ViewModel() {
     @Volatile private var lastLiveBitmap: Bitmap? = null
     private var lastCapturedSampleBitmap: Bitmap? = null
 
+    /**
+     * Điền sẵn mã + tên khi mở từ màn Nhân viên ERP. Chỉ áp dụng khi form còn trống để
+     * không ghi đè nội dung admin đang gõ dở (recomposition / quay lại màn hình).
+     */
+    fun prefill(employeeCode: String, fullName: String) {
+        if (employeeCode.isBlank()) return
+        _state.update {
+            if (it.employeeCode.isNotBlank() || it.capturedCount > 0) it
+            else it.copy(employeeCode = employeeCode, fullName = fullName, message = null)
+        }
+    }
+
     fun onEmployeeCodeChange(value: String) {
         _state.update { it.copy(employeeCode = value, message = null) }
     }
@@ -93,6 +105,8 @@ class EnrollViewModel(private val app: ChamCongApplication) : ViewModel() {
             lastLiveBitmap?.recycle(); lastLiveBitmap = null
             lastCapturedSampleBitmap = null
             _state.value = EnrollUiState(saveSuccess = true, message = code)
+            // Đẩy embedding vừa enroll lên ERP ngay (nếu có mạng + đã cấu hình) — xem API_FACE_SYNC.md.
+            app.employeeSyncCoordinator.requestSync()
         }
     }
 

@@ -30,7 +30,16 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         }
 
         val engine = SyncEngine(app.attendanceRepository)
-        return when (val outcome = engine.syncPending(api, settings.apiKey, settings.deviceCode)) {
+        val outcome = engine.syncPending(api, settings.apiKey, settings.deviceCode)
+
+        // Đồng bộ NV + embedding kèm theo (API_FACE_SYNC.md). Kết quả KHÔNG ảnh hưởng Result
+        // của worker — sync-events là việc chính; server chưa có endpoint (404) cũng không
+        // được làm worker thất bại. Bỏ qua nếu vừa bị 401 (cùng key, chắc chắn cũng 401).
+        if (outcome != SyncOutcome.Unauthorized) {
+            runCatching { app.employeeSyncCoordinator.runSync() }
+        }
+
+        return when (outcome) {
             is SyncOutcome.Completed -> {
                 SyncStatusHolder.update(LastSyncKind.OK)
                 Result.success()

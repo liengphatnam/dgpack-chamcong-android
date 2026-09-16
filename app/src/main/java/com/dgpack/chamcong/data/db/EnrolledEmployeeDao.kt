@@ -23,4 +23,8 @@ interface EnrolledEmployeeDao {
 
     @Delete
     suspend fun delete(employee: EnrolledEmployeeEntity)
+
+    /** Chỉ cập nhật mốc đồng bộ, không đụng embedding/ảnh (tránh đọc-ghi lại BLOB vô ích). */
+    @Query("UPDATE enrolled_employee SET faceSyncedAt = :syncedAt WHERE employeeCode = :employeeCode")
+    suspend fun markFaceSynced(employeeCode: String, syncedAt: String)
 }

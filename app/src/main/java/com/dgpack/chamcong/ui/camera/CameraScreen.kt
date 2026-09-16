@@ -105,6 +105,29 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                 }
             }
 
+            // Có mặt trước camera nhưng độ tin cậy < ngưỡng (mặc định 80%) — báo rõ để
+            // người đứng trước camera biết máy CHƯA nhận, không ghi sự kiện.
+            AnimatedVisibility(
+                visible = uiState.unrecognizedConfidence != null && uiState.overlayName == null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.chua_nhan_dang_duoc_format,
+                            uiState.unrecognizedConfidence ?: 0
+                        ),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+            }
+
             AnimatedVisibility(
                 visible = uiState.overlayName != null,
                 enter = fadeIn(),
@@ -114,12 +137,23 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary,
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = uiState.overlayName ?: "",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = uiState.overlayName ?: "",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        uiState.overlayConfidence?.let { pct ->
+                            Text(
+                                text = stringResource(R.string.do_tin_cay_format, pct),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
                 }
             }
         }

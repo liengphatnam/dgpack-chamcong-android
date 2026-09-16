@@ -38,18 +38,26 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
 
 - `camera/FaceAnalyzer.kt` — ML Kit phát hiện khuôn mặt, throttle ~3fps.
 - `face/FaceEmbedder.kt` — TFLite MobileFaceNet sinh embedding.
-- `face/FaceMatcher.kt` — cosine similarity, ngưỡng cấu hình được ở Settings.
-- `data/db/` — Room (SQLite), 2 bảng `enrolled_employee` / `attendance_event_local`.
-- `sync/SyncEngine.kt` — logic đồng bộ thuần (test được bằng MockWebServer), tách khỏi
+- `face/FaceMatcher.kt` — cosine similarity quy ra % độ tin cậy; **chỉ nhận diện khi
+  ≥ ngưỡng "Độ tin cậy tối thiểu" ở Cài đặt (mặc định 80%)**, thấp hơn thì màn hình báo
+  "Hệ thống chưa nhận dạng được (xx%)" và KHÔNG ghi sự kiện.
+- `data/db/` — Room (SQLite) v2: `enrolled_employee` (có `faceSyncedAt`), `attendance_event_local`,
+  `erp_employee` (bản sao danh sách NV kéo từ ERP).
+- `sync/SyncEngine.kt` — logic đồng bộ sự kiện thuần (test được bằng MockWebServer), tách khỏi
   `sync/SyncWorker.kt` (WorkManager).
-- `network/` — Retrofit theo đúng contract mục [5] của `chamcongFaceID.md`.
+- `sync/EmployeeSyncEngine.kt` + `EmployeeSyncCoordinator.kt` — kéo danh sách NV từ ERP, đẩy/tải
+  embedding khuôn mặt (contract ở [`API_FACE_SYNC.md`](./API_FACE_SYNC.md) — **phía DGP.ERP cần
+  triển khai 3 endpoint này**, app báo 404 rõ ràng cho tới lúc đó).
+- `ui/employees/` — màn "Nhân viên ERP": lọc NV chưa có khuôn mặt, chạm để enroll với mã/tên điền sẵn.
+- `network/` — Retrofit theo đúng contract mục [5] của `chamcongFaceID.md` + `API_FACE_SYNC.md`.
 - Không dùng Hilt/DI framework — `ChamCongApplication` đóng vai trò service locator
   đơn giản (quy mô 4 màn hình, không cần thêm phụ thuộc).
 
 ## TODO Phase 2 (chưa làm, xem mục [12] tài liệu gốc)
 
-- Liveness detection (chống giả mạo ảnh/video).
-- Khoá màn hình quản trị bằng PIN.
+- ~~Liveness detection (chống giả mạo ảnh/video).~~ Đã làm (chớp mắt).
+- ~~Khoá màn hình quản trị bằng PIN.~~ Đã làm.
+- Triển khai 3 endpoint `API_FACE_SYNC.md` phía DGP.ERP (app đã sẵn sàng).
 - Nhận diện nhiều khuôn mặt cùng lúc trong 1 khung hình.
 - Ký APK bằng release keystore thật (hiện dùng debug build — xem mục [8.2]).
 - Test trên thiết bị Android thật (bắt buộc trước khi coi Phase 1 là "xong" — xem mục
