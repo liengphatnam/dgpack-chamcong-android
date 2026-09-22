@@ -33,7 +33,8 @@ fun FaceCameraPreview(
     targetFps: Int = 3,
     onFaceDetected: (FaceDetectionResult) -> Unit,
     onNoFace: () -> Unit = {},
-    wantEvidence: Boolean = false
+    wantEvidence: () -> Boolean = { false },
+    minFaceSize: Float = 0.12f
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -93,7 +94,8 @@ fun FaceCameraPreview(
                         targetFps = targetFps,
                         onFaceDetected = onFaceDetected,
                         onNoFace = onNoFace,
-                        wantEvidence = wantEvidence
+                        wantEvidence = wantEvidence,
+                        minFaceSize = minFaceSize
                     )
                 )
 

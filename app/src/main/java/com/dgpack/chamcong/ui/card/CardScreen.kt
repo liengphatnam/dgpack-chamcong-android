@@ -110,7 +110,8 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
             ForgotCameraLayer(
                 frameWidth = state.frameWidth,
                 frameHeight = state.frameHeight,
-                onFace = viewModel::onForgotFace
+                onFace = viewModel::onForgotFace,
+                wantEvidence = viewModel::wantEvidence
             )
         }
 
@@ -398,7 +399,12 @@ private fun ForgotConfirmContent(state: CardUiState, viewModel: CardViewModel) {
 }
 
 @Composable
-private fun ForgotCameraLayer(frameWidth: Int, frameHeight: Int, onFace: (com.dgpack.chamcong.camera.FaceDetectionResult) -> Unit) {
+private fun ForgotCameraLayer(
+    frameWidth: Int,
+    frameHeight: Int,
+    onFace: (com.dgpack.chamcong.camera.FaceDetectionResult) -> Unit,
+    wantEvidence: () -> Boolean
+) {
     val context = LocalContext.current
     var hasPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -406,7 +412,9 @@ private fun ForgotCameraLayer(frameWidth: Int, frameHeight: Int, onFace: (com.dg
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasPermission = it }
     LaunchedEffect(Unit) { if (!hasPermission) launcher.launch(Manifest.permission.CAMERA) }
     if (hasPermission) {
-        FaceCameraPreview(targetFps = 5, onFaceDetected = onFace, wantEvidence = true)
+        // Người quên thẻ đứng sát máy, mặt chiếm >= 1/4 khung -> ML Kit chỉ quét cỡ lớn, nhanh hơn hẳn.
+        // Ảnh bằng chứng chỉ tạo ở đúng 1 khung sau khi chớp mắt đủ (wantEvidence), không tạo mỗi khung.
+        FaceCameraPreview(targetFps = 4, onFaceDetected = onFace, wantEvidence = wantEvidence, minFaceSize = 0.25f)
         FaceCircleOverlay(
             frameWidth = frameWidth, frameHeight = frameHeight,
             ringColor = Color.White.copy(alpha = 0.9f), sweepFraction = 1f, scrimAlpha = 0.45f,

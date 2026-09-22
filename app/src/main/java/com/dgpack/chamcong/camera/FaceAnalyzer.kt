@@ -38,7 +38,13 @@ class FaceAnalyzer(
     private val targetFps: Int = 3,
     private val onFaceDetected: (FaceDetectionResult) -> Unit,
     private val onNoFace: () -> Unit = {},
-    private val wantEvidence: Boolean = false
+    /**
+     * Hỏi MỖI khung: có cần ảnh bằng chứng ở khung này không. Chuyển vùng mặt sang bitmap + thu nhỏ
+     * tốn ~20–40 ms trên máy yếu, chỉ làm đúng 1 khung sau khi đã chớp mắt đủ, không làm mọi khung.
+     */
+    private val wantEvidence: () -> Boolean = { false },
+    /** Mặt nhỏ nhất ML Kit phải tìm (tỉ lệ bề rộng khung). Lớn hơn = quét ít tầng hơn = nhanh hơn. */
+    private val minFaceSize: Float = 0.12f
 ) : ImageAnalysis.Analyzer {
 
     private val minIntervalMs = 1000L / targetFps
@@ -59,7 +65,7 @@ class FaceAnalyzer(
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            .setMinFaceSize(0.12f)
+            .setMinFaceSize(minFaceSize)
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
             .build()
     )
@@ -100,7 +106,7 @@ class FaceAnalyzer(
                     try {
                         val bb = largest.boundingBox
                         val box = Rect(bb.left * factor, bb.top * factor, bb.right * factor, bb.bottom * factor)
-                        val evidence = if (wantEvidence) {
+                        val evidence = if (wantEvidence()) {
                             val padX = (box.width() * EVIDENCE_PAD_RATIO).toInt()
                             val padY = (box.height() * EVIDENCE_PAD_RATIO).toInt()
                             val region = ImageUtils.faceRegionToBitmap(

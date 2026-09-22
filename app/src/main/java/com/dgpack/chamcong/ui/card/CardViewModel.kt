@@ -109,6 +109,10 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
     private val faceDispatcher = Dispatchers.Default.limitedParallelism(1)
     private var liveness = LivenessTracker(requiredBlinks = 2)
     @Volatile private var capturing = false
+    /** Đã chớp mắt đủ, khung hình kế tiếp cần kèm ảnh bằng chứng (FaceAnalyzer hỏi qua [wantEvidence]). */
+    @Volatile private var needEvidence = false
+
+    fun wantEvidence(): Boolean = needEvidence
 
     init {
         viewModelScope.launch {
@@ -237,6 +241,7 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
     fun confirmForgot() {
         liveness = LivenessTracker(requiredBlinks = 2)
         capturing = false
+        needEvidence = false
         _uiState.update { it.copy(phase = CardPhase.FORGOT_CAMERA, blinks = 0) }
         scheduleReset(FORGOT_TIMEOUT_MS)
     }
@@ -246,24 +251,28 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
     /** Gọi từ luồng camera (~5 fps) trong bước chụp bằng chứng. */
     fun onForgotFace(result: FaceDetectionResult) {
         viewModelScope.launch(faceDispatcher) {
-            var evidenceUsed = false
             try {
                 if (_uiState.value.phase != CardPhase.FORGOT_CAMERA || capturing) return@launch
-                _uiState.update { it.copy(frameWidth = result.imageWidth, frameHeight = result.imageHeight) }
+                if (result.imageWidth != _uiState.value.frameWidth || result.imageHeight != _uiState.value.frameHeight) {
+                    _uiState.update { it.copy(frameWidth = result.imageWidth, frameHeight = result.imageHeight) }
+                }
+                // Đã chớp đủ và khung này có ảnh -> chụp. Nếu khung này chưa có ảnh (yêu cầu vừa bật)
+                // thì chờ khung kế tiếp, không cần chớp lại.
+                if (liveness.isConfirmed) {
+                    val bitmap = result.evidenceBitmap ?: run { needEvidence = true; return@launch }
+                    capturing = true
+                    needEvidence = false
+                    finishForgot(toJpeg(bitmap))
+                    return@launch
+                }
                 val eye = result.eyeOpenProbability ?: return@launch
                 liveness.onEyeOpenSample(eye)
                 if (liveness.blinks != _uiState.value.blinks) {
                     _uiState.update { it.copy(blinks = liveness.blinks) }
                 }
-                if (liveness.isConfirmed) {
-                    capturing = true
-                    val jpeg = result.evidenceBitmap?.let { toJpeg(it) }
-                    evidenceUsed = true
-                    finishForgot(jpeg)
-                }
+                if (liveness.isConfirmed) needEvidence = true
             } finally {
                 result.evidenceBitmap?.recycle()
-                if (!evidenceUsed) Unit
             }
         }
     }
@@ -319,6 +328,7 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
     private fun backToIdle() {
         resetJob?.cancel()
         capturing = false
+        needEvidence = false
         _uiState.update {
             it.copy(
                 phase = CardPhase.IDLE, holder = null, detail = null, showDetail = false,
