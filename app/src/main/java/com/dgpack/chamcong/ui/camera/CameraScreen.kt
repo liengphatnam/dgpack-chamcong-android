@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +67,21 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             FaceCameraPreview(targetFps = 3, onFaceDetected = viewModel::onFaceDetected)
+            // Khung tròn hướng dẫn đặt mặt (cùng vị trí với màn Đăng ký). Viền đổi màu theo
+            // trạng thái: trắng chờ, xanh đã nhận, đỏ chưa nhận dạng được, vàng đứng xa.
+            FaceCircleOverlay(
+                frameWidth = uiState.frameWidth,
+                frameHeight = uiState.frameHeight,
+                ringColor = when {
+                    uiState.overlayName != null || uiState.celebration != null -> Color(0xFF2ECC71)
+                    uiState.unrecognizedConfidence != null -> Color(0xFFE74C3C)
+                    uiState.tooFar -> Color(0xFFF1C40F)
+                    else -> Color.White.copy(alpha = 0.9f)
+                },
+                sweepFraction = 1f,
+                scrimAlpha = 0.35f,
+                modifier = Modifier.fillMaxSize()
+            )
         } else {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 Column(

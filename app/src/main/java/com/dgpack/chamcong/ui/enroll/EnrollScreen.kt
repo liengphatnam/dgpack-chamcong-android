@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,13 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,13 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dgpack.chamcong.R
 import com.dgpack.chamcong.face.EnrollPose
-import com.dgpack.chamcong.face.FaceQualityChecker
 import com.dgpack.chamcong.face.QualityHint
 import com.dgpack.chamcong.ui.appViewModel
 import com.dgpack.chamcong.ui.camera.FaceCameraPreview
+import com.dgpack.chamcong.ui.camera.FaceCircleOverlay
 
 /**
- * Màn đăng ký khuôn mặt kiểu eKYC ngân hàng: camera + khung oval, vòng tiến độ % chất lượng,
+ * Màn đăng ký khuôn mặt kiểu eKYC ngân hàng: camera + khung tròn, vòng tiến độ % chất lượng,
  * gợi ý từng bước (nhìn thẳng / quay trái / quay phải), tự chụp khi đạt 100%, không có nút
  * chụp tay. Nút Lưu chỉ bật khi đủ 5 ảnh đạt.
  */
@@ -112,11 +105,12 @@ fun EnrollScreen(onBack: () -> Unit, prefillCode: String = "", prefillName: Stri
                         onFaceDetected = viewModel::onLiveFaceDetected,
                         onNoFace = viewModel::onNoFace
                     )
-                    FaceOvalOverlay(
-                        percent = state.qualityPercent,
-                        complete = state.samplesComplete,
+                    FaceCircleOverlay(
                         frameWidth = state.frameWidth,
                         frameHeight = state.frameHeight,
+                        ringColor = qualityColor(state.qualityPercent, state.samplesComplete),
+                        sweepFraction = if (state.samplesComplete) 1f else state.qualityPercent / 100f,
+                        scrimAlpha = 0.55f,
                         modifier = Modifier.fillMaxSize()
                     )
                     // Bước + gợi ý, đặt dưới oval
@@ -218,52 +212,6 @@ fun EnrollScreen(onBack: () -> Unit, prefillCode: String = "", prefillName: Stri
                 }
             }
         }
-    }
-}
-
-/**
- * Lớp phủ tối có khoét oval trong suốt + viền/vòng tiến độ đổi màu theo %.
- * Oval vẽ đúng vị trí của khung phân tích (toạ độ chuẩn hoá trong FaceQualityChecker) sau khi
- * quy đổi qua phép co giãn FILL_CENTER mà PreviewView đang dùng — nhờ vậy vị trí kiểm tra
- * "mặt trong oval" và vị trí oval nhìn thấy trùng nhau.
- */
-@Composable
-private fun FaceOvalOverlay(
-    percent: Int,
-    complete: Boolean,
-    frameWidth: Int,
-    frameHeight: Int,
-    modifier: Modifier = Modifier
-) {
-    val ringColor = qualityColor(percent, complete)
-    val scrim = Color.Black.copy(alpha = 0.55f)
-    Canvas(modifier = modifier.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
-        val scale = maxOf(size.width / frameWidth, size.height / frameHeight)
-        val ox = (size.width - frameWidth * scale) / 2f
-        val oy = (size.height - frameHeight * scale) / 2f
-        val cx = ox + FaceQualityChecker.OVAL_CX * frameWidth * scale
-        val cy = oy + FaceQualityChecker.OVAL_CY * frameHeight * scale
-        // Hình tròn: cùng 1 bán kính cho cả 2 trục (theo bề rộng khung hình, như FaceQualityChecker).
-        val rx = FaceQualityChecker.OVAL_R * frameWidth * scale
-        val ry = rx
-        val topLeft = Offset(cx - rx, cy - ry)
-        val ovalSize = Size(rx * 2, ry * 2)
-
-        drawRect(scrim)
-        drawOval(Color.Transparent, topLeft = topLeft, size = ovalSize, blendMode = BlendMode.Clear)
-
-        val stroke = 6.dp.toPx()
-        drawOval(Color.White.copy(alpha = 0.35f), topLeft = topLeft, size = ovalSize, style = Stroke(stroke))
-        val sweep = if (complete) 360f else 360f * percent / 100f
-        drawArc(
-            color = ringColor,
-            startAngle = -90f,
-            sweepAngle = sweep,
-            useCenter = false,
-            topLeft = topLeft,
-            size = ovalSize,
-            style = Stroke(stroke)
-        )
     }
 }
 
