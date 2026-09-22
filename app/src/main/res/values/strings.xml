@@ -38,6 +38,8 @@
     <string name="forgot_tong_tru_format">Tổng tháng này đã bị trừ %1$s</string>
     <string name="forgot_khong_tru">Chưa bị trừ tiền</string>
     <string name="nut_huy">Huỷ</string>
+    <string name="nut_huy_ve_dau">Huỷ, về màn hình đầu</string>
+    <string name="nut_xong">Xong</string>
 
     <!-- Gán thẻ từ -->
     <string name="tieu_de_gan_the">Gán thẻ từ</string>

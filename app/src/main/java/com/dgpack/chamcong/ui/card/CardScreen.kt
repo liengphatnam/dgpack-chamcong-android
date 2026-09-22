@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.EventBusy
@@ -130,7 +131,7 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
                 CardPhase.FORGOT_CODE -> ForgotCodeContent(state, viewModel)
                 CardPhase.FORGOT_CONFIRM -> ForgotConfirmContent(state, viewModel)
                 CardPhase.FORGOT_CAMERA -> ForgotCameraHint(state, onCancel = viewModel::cancelForgot)
-                CardPhase.FORGOT_DONE -> ForgotDoneContent(state)
+                CardPhase.FORGOT_DONE -> ForgotDoneContent(state, onDone = viewModel::cancelForgot)
             }
 
             state.celebration?.let { CelebrationOverlay(it) }
@@ -316,10 +317,21 @@ private fun NoticeCard(icon: ImageVector, color: Color, title: String, subtitle:
 
 @Composable
 private fun ForgotCodeContent(state: CardUiState, viewModel: CardViewModel) {
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 8.dp).verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(24.dp)) {
-            Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Filled.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    OutlinedButton(onClick = viewModel::cancelForgot) {
+                        Icon(Icons.Filled.Close, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.nut_huy_ve_dau))
+                    }
+                }
+                Icon(Icons.Filled.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
                 Text(stringResource(R.string.card_nut_quen_the), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.forgot_nhap_ma), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 // Ô hiển thị số đã gõ (không phải TextField -> không bật bàn phím điện thoại)
@@ -343,9 +355,9 @@ private fun ForgotCodeContent(state: CardUiState, viewModel: CardViewModel) {
                 NumericKeypad(
                     onDigit = viewModel::onForgotDigit,
                     onBackspace = viewModel::onForgotBackspace,
-                    onOk = { viewModel.lookupForgotCode() }
+                    onOk = { viewModel.lookupForgotCode() },
+                    keySize = 58.dp
                 )
-                TextButton(onClick = viewModel::cancelForgot) { Text(stringResource(R.string.nut_huy)) }
             }
         }
     }
@@ -354,9 +366,20 @@ private fun ForgotCodeContent(state: CardUiState, viewModel: CardViewModel) {
 @Composable
 private fun ForgotConfirmContent(state: CardUiState, viewModel: CardViewModel) {
     val holder = state.holder ?: return
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 8.dp).verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(24.dp)) {
-            Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    OutlinedButton(onClick = viewModel::cancelForgot) {
+                        Icon(Icons.Filled.Close, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.nut_huy_ve_dau))
+                    }
+                }
                 Icon(Icons.Filled.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
                 Text(holder.fullName, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Text(holder.employeeCode, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -419,13 +442,17 @@ private fun ForgotCameraHint(state: CardUiState, onCancel: () -> Unit) {
                     Text(state.holder?.fullName ?: "", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            TextButton(onClick = onCancel) { Text(stringResource(R.string.nut_huy)) }
+            OutlinedButton(onClick = onCancel) {
+                Icon(Icons.Filled.Close, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.nut_huy_ve_dau))
+            }
         }
     }
 }
 
 @Composable
-private fun ForgotDoneContent(state: CardUiState) {
+private fun ForgotDoneContent(state: CardUiState, onDone: () -> Unit) {
     val r = state.forgotResult ?: return
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(24.dp)) {
@@ -442,6 +469,9 @@ private fun ForgotDoneContent(state: CardUiState) {
                     else stringResource(R.string.forgot_khong_tru),
                     style = MaterialTheme.typography.bodyLarge
                 )
+                Button(onClick = onDone, modifier = Modifier.padding(top = 8.dp)) {
+                    Text(stringResource(R.string.nut_xong))
+                }
             }
         }
     }
