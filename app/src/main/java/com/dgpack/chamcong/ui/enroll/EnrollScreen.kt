@@ -243,8 +243,9 @@ private fun FaceOvalOverlay(
         val oy = (size.height - frameHeight * scale) / 2f
         val cx = ox + FaceQualityChecker.OVAL_CX * frameWidth * scale
         val cy = oy + FaceQualityChecker.OVAL_CY * frameHeight * scale
-        val rx = FaceQualityChecker.OVAL_RX * frameWidth * scale
-        val ry = FaceQualityChecker.OVAL_RY * frameHeight * scale
+        // Hình tròn: cùng 1 bán kính cho cả 2 trục (theo bề rộng khung hình, như FaceQualityChecker).
+        val rx = FaceQualityChecker.OVAL_R * frameWidth * scale
+        val ry = rx
         val topLeft = Offset(cx - rx, cy - ry)
         val ovalSize = Size(rx * 2, ry * 2)
 

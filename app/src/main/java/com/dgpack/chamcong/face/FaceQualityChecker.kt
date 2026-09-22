@@ -43,7 +43,7 @@ data class QualityResult(
 
 /**
  * Chấm điểm chất lượng khung hình để đăng ký khuôn mặt, kiểu eKYC ngân hàng: mặt phải nằm
- * trong khung oval, đủ lớn, nhìn đúng tư thế yêu cầu, đủ sáng, không mờ, mở mắt, chỉ 1 người.
+ * trong khung tròn, đủ lớn, nhìn đúng tư thế yêu cầu, đủ sáng, không mờ, mở mắt, chỉ 1 người.
  * Mỗi tiêu chí cho điểm 0..1 (dốc mềm để % tăng dần khi người dùng chỉnh), [QualityResult.passed]
  * chỉ true khi MỌI tiêu chí đạt ngưỡng cứng. Gợi ý = tiêu chí điểm thấp nhất.
  *
@@ -53,9 +53,8 @@ data class QualityResult(
 object FaceQualityChecker {
     const val OVAL_CX = 0.5f
     const val OVAL_CY = 0.45f
-    /** Bán kính oval theo tỉ lệ bề rộng / bề cao khung hình. */
-    const val OVAL_RX = 0.30f
-    const val OVAL_RY = 0.26f
+    /** Khung là HÌNH TRÒN: bán kính = [OVAL_R] x bề rộng khung hình (cả 2 trục cùng 1 bán kính). */
+    const val OVAL_R = 0.32f
 
     /** Bề rộng mặt / bề rộng khung hình: đạt khi trong [MIN_FACE_RATIO, MAX_FACE_RATIO]. */
     const val MIN_FACE_RATIO = 0.22f
@@ -98,8 +97,9 @@ object FaceQualityChecker {
         // 3. Mặt nằm trong oval
         val cx = (frame.faceLeft + frame.faceRight) / 2f / frame.imageWidth
         val cy = (frame.faceTop + frame.faceBottom) / 2f / frame.imageHeight
-        val dx = (cx - OVAL_CX) / OVAL_RX
-        val dy = (cy - OVAL_CY) / OVAL_RY
+        val radiusPx = OVAL_R * frame.imageWidth
+        val dx = (cx - OVAL_CX) * frame.imageWidth / radiusPx
+        val dy = (cy - OVAL_CY) * frame.imageHeight / radiusPx
         val dist = sqrt(dx * dx + dy * dy)
         scores += if (dist <= MAX_CENTER_OFFSET) 1f to QualityHint.GOOD
         else ramp(-dist, -1.2f, -MAX_CENTER_OFFSET) to QualityHint.MOVE_INTO_FRAME
