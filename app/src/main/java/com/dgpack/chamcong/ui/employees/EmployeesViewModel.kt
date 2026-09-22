@@ -115,6 +115,12 @@ class EmployeesViewModel(private val app: ChamCongApplication, purpose: Employee
 
     private fun matches(row: EmployeeRow, q: String): Boolean {
         if (q.isBlank()) return true
+        // Gõ toàn số (bàn phím số trong app): khớp phần số của mã NV, vd "0001" hoặc "1" -> DN0001.
+        if (q.all { it.isDigit() }) {
+            val codeDigits = row.employeeCode.filter { it.isDigit() }
+            return codeDigits.contains(q) || codeDigits.trimStart('0') == q.trimStart('0') ||
+                (row.cardId?.contains(q) ?: false)
+        }
         val needle = fold(q)
         return fold(row.employeeCode).contains(needle) || fold(row.fullName).contains(needle) ||
             (row.cardId?.let { fold(it).contains(needle) } ?: false)

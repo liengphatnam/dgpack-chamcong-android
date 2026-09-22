@@ -206,8 +206,16 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
         scheduleReset(FORGOT_TIMEOUT_MS)
     }
 
-    fun onForgotCodeChange(value: String) {
-        _uiState.update { it.copy(forgotCodeInput = value.take(20), forgotNotFound = false) }
+    /** Bàn phím số trong app: chỉ nhận chữ số, tối đa 8 ký tự. */
+    fun onForgotDigit(digit: String) {
+        _uiState.update {
+            it.copy(forgotCodeInput = (it.forgotCodeInput + digit.filter { c -> c.isDigit() }).take(8), forgotNotFound = false)
+        }
+        scheduleReset(FORGOT_TIMEOUT_MS)
+    }
+
+    fun onForgotBackspace() {
+        _uiState.update { it.copy(forgotCodeInput = it.forgotCodeInput.dropLast(1), forgotNotFound = false) }
         scheduleReset(FORGOT_TIMEOUT_MS)
     }
 
@@ -215,7 +223,8 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
         val code = _uiState.value.forgotCodeInput.trim()
         if (code.isEmpty()) return
         viewModelScope.launch {
-            val holder = app.cardRepository.findEmployee(code)
+            // Mã NV kiểu DN0001: người dùng chỉ gõ "0001" trên bàn phím số của app.
+            val holder = app.cardRepository.findEmployeeByDigits(code)
             if (holder == null) {
                 _uiState.update { it.copy(forgotNotFound = true) }
             } else {

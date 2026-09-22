@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -42,6 +43,7 @@ import com.dgpack.chamcong.sync.EmployeeSyncOutcome
 import com.dgpack.chamcong.sync.EmployeeSyncPhase
 import com.dgpack.chamcong.sync.EmployeeSyncState
 import com.dgpack.chamcong.ui.appViewModel
+import com.dgpack.chamcong.ui.common.NumericKeypad
 
 /**
  * Danh sách Nhân viên ERP với ô tìm kiếm (mã / tên / thẻ, không dấu). Chạm 1 người:
@@ -92,19 +94,49 @@ fun EmployeesScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::setQuery,
-                label = { Text(stringResource(R.string.nv_tim_kiem)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (state.query.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.setQuery("") }) { Icon(Icons.Filled.Clear, contentDescription = null) }
+            if (purpose == EmployeePurpose.ASSIGN_CARD) {
+                // Gán thẻ: tìm theo PHẦN SỐ của mã NV bằng bàn phím số trong app (không bật bàn phím điện thoại).
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Search, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = state.query.ifEmpty { stringResource(R.string.nv_tim_theo_so) },
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (state.query.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (state.query.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setQuery("") }) { Icon(Icons.Filled.Clear, contentDescription = null) }
+                        }
                     }
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            )
+                }
+                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.Center) {
+                    NumericKeypad(
+                        onDigit = { d -> viewModel.setQuery((state.query + d).take(8)) },
+                        onBackspace = { viewModel.setQuery(state.query.dropLast(1)) },
+                        compact = true
+                    )
+                }
+            } else {
+                OutlinedTextField(
+                    value = state.query,
+                    onValueChange = viewModel::setQuery,
+                    label = { Text(stringResource(R.string.nv_tim_kiem)) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (state.query.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setQuery("") }) { Icon(Icons.Filled.Clear, contentDescription = null) }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),

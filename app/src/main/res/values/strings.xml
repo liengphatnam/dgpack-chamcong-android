@@ -143,7 +143,7 @@
     <string name="card_ct_tien_tru">Tiền đã bị trừ</string>
     <string name="card_ct_bien_ban">Biên bản phạt</string>
     <string name="card_ct_khen_thuong">Khen thưởng</string>
-    <string name="forgot_nhap_ma">Nhập mã nhân viên</string>
+    <string name="forgot_nhap_ma">Nhập phần số của mã nhân viên (ví dụ DN0001 → gõ 0001)</string>
     <string name="forgot_nut_tim">Tìm</string>
     <string name="forgot_khong_tim_thay">Không tìm thấy mã nhân viên này</string>
     <string name="forgot_xac_nhan">Đúng là bạn chứ? Bấm xác nhận rồi nhìn vào camera.</string>
@@ -163,6 +163,7 @@
     <string name="gan_the_chua_co">Chưa có thẻ</string>
     <string name="gan_the_xong_format">Đã gán thẻ %1$s</string>
     <string name="nv_tim_kiem">Tìm theo mã, tên hoặc số thẻ</string>
+    <string name="nv_tim_theo_so">Gõ phần số của mã nhân viên…</string>
     <string name="nv_bam_de_gan_the">Chạm vào một nhân viên rồi quét thẻ để gán</string>
     <string name="nv_da_co_the_format">%1$d/%2$d đã có thẻ</string>
     <string name="tieu_de_nhat_ky_quen_the">Nhật ký quên thẻ</string>

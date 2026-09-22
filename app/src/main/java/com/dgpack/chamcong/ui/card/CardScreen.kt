@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
@@ -44,7 +42,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,14 +60,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dgpack.chamcong.BuildConfig
 import com.dgpack.chamcong.R
 import com.dgpack.chamcong.ui.appViewModel
+import com.dgpack.chamcong.ui.common.NumericKeypad
 import com.dgpack.chamcong.ui.camera.CelebrationOverlay
 import com.dgpack.chamcong.ui.camera.FaceCameraPreview
 import com.dgpack.chamcong.ui.camera.FaceCircleOverlay
@@ -320,23 +316,31 @@ private fun ForgotCodeContent(state: CardUiState, viewModel: CardViewModel) {
             Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Filled.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
                 Text(stringResource(R.string.card_nut_quen_the), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                OutlinedTextField(
-                    value = state.forgotCodeInput,
-                    onValueChange = viewModel::onForgotCodeChange,
-                    label = { Text(stringResource(R.string.forgot_nhap_ma)) },
-                    singleLine = true,
-                    isError = state.forgotNotFound,
-                    supportingText = { if (state.forgotNotFound) Text(stringResource(R.string.forgot_khong_tim_thay)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { viewModel.lookupForgotCode() }),
+                Text(stringResource(R.string.forgot_nhap_ma), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                // Ô hiển thị số đã gõ (không phải TextField -> không bật bàn phím điện thoại)
+                Surface(
+                    color = if (state.forgotNotFound) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TextButton(onClick = viewModel::cancelForgot) { Text(stringResource(R.string.nut_huy)) }
-                    Button(onClick = viewModel::lookupForgotCode, enabled = state.forgotCodeInput.isNotBlank()) {
-                        Text(stringResource(R.string.forgot_nut_tim))
-                    }
+                ) {
+                    Text(
+                        text = state.forgotCodeInput.ifEmpty { "－－－－" },
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        letterSpacing = androidx.compose.ui.unit.TextUnit(6f, androidx.compose.ui.unit.TextUnitType.Sp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                    )
                 }
+                if (state.forgotNotFound) {
+                    Text(stringResource(R.string.forgot_khong_tim_thay), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                }
+                NumericKeypad(
+                    onDigit = viewModel::onForgotDigit,
+                    onBackspace = viewModel::onForgotBackspace,
+                    onOk = { viewModel.lookupForgotCode() }
+                )
+                TextButton(onClick = viewModel::cancelForgot) { Text(stringResource(R.string.nut_huy)) }
             }
         }
     }

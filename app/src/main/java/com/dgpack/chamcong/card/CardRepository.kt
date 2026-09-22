@@ -55,6 +55,24 @@ class CardRepository(
         return null
     }
 
+    /**
+     * Tìm NV theo phần SỐ của mã (bàn phím số trong app): "0001" khớp "DN0001". Ưu tiên khớp
+     * đúng chuỗi số (giữ số 0 đầu), rồi tới bằng nhau về giá trị ("1" cũng ra "DN0001").
+     * Nhiều mã cùng phần số (vd DN0001 và KH0001) -> lấy mã nhỏ nhất theo thứ tự chữ.
+     */
+    suspend fun findEmployeeByDigits(rawDigits: String): CardHolder? {
+        val digits = rawDigits.filter { it.isDigit() }
+        if (digits.isEmpty()) return null
+        val candidates = erpDao.getAllOnce().filter { it.isActive }.map { CardHolder(it.employeeCode, it.fullName) } +
+            enrolledDao.getAllOnce().map { CardHolder(it.employeeCode, it.fullName) }
+        val exact = candidates.filter { digitsOf(it.employeeCode) == digits }.sortedBy { it.employeeCode }
+        if (exact.isNotEmpty()) return exact.first()
+        val value = digits.toLongOrNull() ?: return null
+        return candidates
+            .filter { digitsOf(it.employeeCode).toLongOrNull() == value }
+            .minByOrNull { it.employeeCode }
+    }
+
     suspend fun nameOf(employeeCode: String): String =
         erpDao.getByCode(employeeCode)?.fullName
             ?: enrolledDao.getByCode(employeeCode)?.fullName
@@ -158,6 +176,8 @@ class CardRepository(
     }
 
     companion object {
+        fun digitsOf(code: String): String = code.filter { it.isDigit() }
+
         /** "yyyy-MM" theo lịch VN. */
         fun monthKey(date: LocalDate): String = "%04d-%02d".format(date.year, date.monthValue)
     }
