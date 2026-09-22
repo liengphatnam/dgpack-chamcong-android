@@ -213,7 +213,7 @@ Công ty mong mọi người xem chiếc máy ở cổng không phải là ngư�
 - Mất mạng máy vẫn ghi bình thường, dữ liệu gửi về sau. Bạn không cần làm gì.
 - Nếu máy báo "Thẻ chưa được gán cho ai", thẻ của bạn chưa được gắn tên, ghé nhân sự.
 - Nếu bạn trúng thưởng, ghé phòng nhân sự trong ngày để nhận. Nhân sự có sổ ghi rõ ngày, tên, số lon.
-- Trong hai tháng đầu, phòng nhân sự trực ở cổng vào giờ cao điểm để hỗ trợ.
+- Gặp vướng mắc gì với máy, báo phòng nhân sự để được hướng dẫn.
 
 ---
 
