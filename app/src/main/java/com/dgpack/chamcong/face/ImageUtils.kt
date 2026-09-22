@@ -109,6 +109,45 @@ object ImageUtils {
     }
 
     /**
+     * Đo độ nét (phương sai Laplacian 4 láng giềng) và độ sáng trung bình trên ảnh xám của
+     * [bitmap] 112x112 — ~12k pixel nên rất rẻ, dùng cho FaceQualityChecker lúc đăng ký.
+     * @return Pair(sharpness, brightness)
+     */
+    fun measureSharpnessAndBrightness(bitmap: Bitmap): Pair<Float, Float> {
+        val w = bitmap.width
+        val h = bitmap.height
+        val px = IntArray(w * h)
+        bitmap.getPixels(px, 0, w, 0, 0, w, h)
+        val gray = IntArray(w * h)
+        var sum = 0L
+        for (i in px.indices) {
+            val p = px[i]
+            val g = (((p shr 16) and 0xFF) * 77 + ((p shr 8) and 0xFF) * 150 + (p and 0xFF) * 29) shr 8
+            gray[i] = g
+            sum += g
+        }
+        val brightness = sum.toFloat() / px.size
+
+        var lapSum = 0.0
+        var lapSqSum = 0.0
+        var n = 0
+        for (y in 1 until h - 1) {
+            val row = y * w
+            for (x in 1 until w - 1) {
+                val i = row + x
+                val l = 4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - w] - gray[i + w]
+                lapSum += l
+                lapSqSum += l.toDouble() * l
+                n++
+            }
+        }
+        if (n == 0) return 0f to brightness
+        val mean = lapSum / n
+        val variance = lapSqSum / n - mean * mean
+        return variance.toFloat() to brightness
+    }
+
+    /**
      * Crop vùng khuôn mặt (theo boundingBox ML Kit trả về) từ ảnh gốc, thêm margin,
      * clamp trong biên ảnh, rồi resize đúng kích thước input của model (112x112).
      * Dùng làm phương án dự phòng khi ML Kit không trả về vị trí 2 mắt (xem [alignFace]).

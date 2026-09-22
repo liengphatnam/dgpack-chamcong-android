@@ -27,7 +27,8 @@ import java.util.concurrent.Executors
 fun FaceCameraPreview(
     modifier: Modifier = Modifier,
     targetFps: Int = 3,
-    onFaceDetected: (FaceDetectionResult) -> Unit
+    onFaceDetected: (FaceDetectionResult) -> Unit,
+    onNoFace: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -59,7 +60,10 @@ fun FaceCameraPreview(
                     .setTargetResolution(Size(800, 600))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
-                analysis.setAnalyzer(analysisExecutor, FaceAnalyzer(targetFps = targetFps, onFaceDetected = onFaceDetected))
+                analysis.setAnalyzer(
+                    analysisExecutor,
+                    FaceAnalyzer(targetFps = targetFps, onFaceDetected = onFaceDetected, onNoFace = onNoFace)
+                )
 
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(

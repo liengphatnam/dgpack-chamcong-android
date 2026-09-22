@@ -24,7 +24,26 @@
     <string name="enroll_thanh_cong">Đã lưu khuôn mặt cho %1$s</string>
     <string name="enroll_loi_thieu_ma">Vui lòng nhập mã nhân viên</string>
     <string name="enroll_loi_khong_thay_mat">Không phát hiện khuôn mặt trong ảnh, vui lòng chụp lại</string>
-    <string name="enroll_loi_chua_du_anh">Cần chụp tối thiểu 3 ảnh trước khi lưu</string>
+    <string name="enroll_loi_chua_du_anh">Cần đủ 5 ảnh đạt chất lượng trước khi lưu</string>
+    <string name="nut_chup_lai">Chụp lại</string>
+    <string name="enroll_du_anh">Đã đủ 5 ảnh đạt chất lượng — bấm Lưu đăng ký</string>
+    <string name="enroll_buoc_format">Bước %1$d/%2$d: %3$s</string>
+    <string name="pose_front">Nhìn thẳng vào camera</string>
+    <string name="pose_side_a">Quay đầu nhẹ sang một bên</string>
+    <string name="pose_side_b">Quay đầu nhẹ sang bên kia</string>
+    <string name="hint_no_face">Đưa khuôn mặt vào khung</string>
+    <string name="hint_multi">Chỉ một người trong khung</string>
+    <string name="hint_into_frame">Đưa mặt vào giữa khung</string>
+    <string name="hint_closer">Lại gần hơn</string>
+    <string name="hint_back">Lùi ra xa một chút</string>
+    <string name="hint_straight">Giữ đầu thẳng, không ngẩng hay nghiêng</string>
+    <string name="hint_other_way">Quay sang bên kia</string>
+    <string name="hint_turn_less">Quay ít hơn một chút</string>
+    <string name="hint_dark">Thiếu sáng — quay mặt về phía ánh sáng</string>
+    <string name="hint_bright">Quá sáng — tránh ngược sáng</string>
+    <string name="hint_blurry">Ảnh mờ — giữ yên</string>
+    <string name="hint_eyes">Mở mắt</string>
+    <string name="hint_good">Giữ yên…</string>
     <string name="enroll_canh_bao_ghi_de">Mã nhân viên này đã đăng ký trước đó — lưu sẽ ghi đè dữ liệu cũ</string>
 
     <!-- Settings -->

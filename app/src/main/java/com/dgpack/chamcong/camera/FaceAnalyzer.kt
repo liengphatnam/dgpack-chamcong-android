@@ -6,6 +6,7 @@ import android.graphics.PointF
 import android.graphics.Rect
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import com.dgpack.chamcong.face.FaceFrameInfo
 import com.dgpack.chamcong.face.ImageUtils
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
@@ -18,14 +19,16 @@ import com.google.mlkit.vision.face.FaceLandmark
  * @param faceWidthPx       bề rộng khuôn mặt trong khung hình gốc — quá nhỏ = người đứng xa,
  *                          ảnh phóng to bị nhoè, embedding không đáng tin
  * @param aligned           true nếu đã căn theo landmark 2 mắt
+ * @param detectMs          thời gian ML Kit phát hiện + chuẩn bị ảnh (ms) — hiện lên màn hình để chẩn đoán
+ * @param frame             số đo khung hình (vị trí mặt, góc đầu, độ nét, độ sáng) cho FaceQualityChecker
  */
 data class FaceDetectionResult(
     val croppedBitmap: Bitmap,
     val eyeOpenProbability: Float?,
     val faceWidthPx: Int,
     val aligned: Boolean,
-    /** Thời gian ML Kit phát hiện mặt + chuẩn bị ảnh cho frame này (ms) — hiện lên màn hình để chẩn đoán máy chậm. */
-    val detectMs: Long
+    val detectMs: Long,
+    val frame: FaceFrameInfo
 )
 
 /**
@@ -34,10 +37,13 @@ data class FaceDetectionResult(
  * Khi tìm thấy mặt, căn chỉnh theo 2 mắt + resize rồi trả về qua [onFaceDetected] để bước
  * sau (FaceEmbedder + FaceMatcher) nhận diện danh tính. Bật classification mode để lấy kèm
  * xác suất mắt mở (liveness chớp mắt) và landmark mode để lấy vị trí 2 mắt (căn chỉnh).
+ *
+ * @param onNoFace gọi khi khung hình không có mặt nào (màn Đăng ký dùng để báo "đưa mặt vào khung").
  */
 class FaceAnalyzer(
     private val targetFps: Int = 3,
-    private val onFaceDetected: (FaceDetectionResult) -> Unit
+    private val onFaceDetected: (FaceDetectionResult) -> Unit,
+    private val onNoFace: () -> Unit = {}
 ) : ImageAnalysis.Analyzer {
 
     private val minIntervalMs = 1000L / targetFps
@@ -82,6 +88,8 @@ class FaceAnalyzer(
 
         val rotation = imageProxy.imageInfo.rotationDegrees
         val inputImage = InputImage.fromMediaImage(mediaImage, rotation)
+        val uprightW = if (rotation == 90 || rotation == 270) imageProxy.height else imageProxy.width
+        val uprightH = if (rotation == 90 || rotation == 270) imageProxy.width else imageProxy.height
 
         detector.process(inputImage)
             .addOnSuccessListener { faces ->
@@ -89,7 +97,9 @@ class FaceAnalyzer(
                 // hình, lấy mặt lớn nhất (gần camera nhất, khả năng cao nhất là người
                 // đang chấm công, không phải người đi ngang phía sau).
                 val largest = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
-                if (largest != null) {
+                if (largest == null) {
+                    onNoFace()
+                } else {
                     try {
                         // Chỉ chuyển vùng quanh mặt (mở rộng 60% mỗi phía để đủ chỗ cho phép căn
                         // chỉnh xoay/co giãn), KHÔNG chuyển cả khung hình -> nhẹ máy, hết giật.
@@ -125,13 +135,30 @@ class FaceAnalyzer(
                             rightProb != null -> rightProb
                             else -> null
                         }
+                        val quality = ImageUtils.measureSharpnessAndBrightness(cropped)
+                        val frame = FaceFrameInfo(
+                            imageWidth = uprightW,
+                            imageHeight = uprightH,
+                            faceLeft = box.left,
+                            faceTop = box.top,
+                            faceRight = box.right,
+                            faceBottom = box.bottom,
+                            faceCount = faces.size,
+                            yaw = largest.headEulerAngleY,
+                            pitch = largest.headEulerAngleX,
+                            roll = largest.headEulerAngleZ,
+                            eyeOpenProbability = eyeOpenProbability,
+                            sharpness = quality.first,
+                            brightness = quality.second
+                        )
                         onFaceDetected(
                             FaceDetectionResult(
                                 croppedBitmap = cropped,
                                 eyeOpenProbability = eyeOpenProbability,
-                                faceWidthPx = largest.boundingBox.width(),
+                                faceWidthPx = box.width(),
                                 aligned = aligned,
-                                detectMs = System.currentTimeMillis() - startedAt
+                                detectMs = System.currentTimeMillis() - startedAt,
+                                frame = frame
                             )
                         )
                     } catch (_: Exception) {
