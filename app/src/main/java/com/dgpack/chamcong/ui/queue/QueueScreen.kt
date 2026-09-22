@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -33,10 +34,13 @@ import com.dgpack.chamcong.R
 import com.dgpack.chamcong.data.db.AttendanceEventEntity
 import com.dgpack.chamcong.data.db.SyncStatus
 import com.dgpack.chamcong.ui.appViewModel
+import com.dgpack.chamcong.ui.pin.AdminLevel
 import com.dgpack.chamcong.util.TimeUtils
 
 @Composable
 fun QueueScreen(
+    level: AdminLevel,
+    onElevate: () -> Unit,
     onBack: () -> Unit,
     onOpenEnroll: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -49,13 +53,18 @@ fun QueueScreen(
     Scaffold(
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.quay_lai))
                 }
                 Text(stringResource(R.string.tieu_de_hang_doi), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    text = "  ·  " + stringResource(R.string.quyen_cap_format, if (level == AdminLevel.LEVEL_2) 2 else 1),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     ) { padding ->
@@ -95,8 +104,13 @@ fun QueueScreen(
                         else stringResource(R.string.tieu_de_nhan_vien)
                     )
                 }
-                OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
-                OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
+                // Cấp 1 chỉ được đồng bộ + đăng ký khuôn mặt; sổ trúng thưởng và cài đặt cần cấp 2.
+                if (level == AdminLevel.LEVEL_2) {
+                    OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
+                    OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
+                } else {
+                    OutlinedButton(onClick = onElevate) { Text(stringResource(R.string.nut_mat_ma_cap_2)) }
+                }
             }
 
             if (state.counts.unknownEmployee > 0) {

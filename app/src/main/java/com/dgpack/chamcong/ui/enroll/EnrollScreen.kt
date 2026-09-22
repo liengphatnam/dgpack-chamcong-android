@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -54,7 +55,12 @@ import com.dgpack.chamcong.ui.camera.FaceCircleOverlay
  * chụp tay. Nút Lưu chỉ bật khi đủ 5 ảnh đạt.
  */
 @Composable
-fun EnrollScreen(onBack: () -> Unit, prefillCode: String = "", prefillName: String = "") {
+fun EnrollScreen(
+    onBack: () -> Unit,
+    prefillCode: String = "",
+    prefillName: String = "",
+    onSaved: () -> Unit = {}
+) {
     val context = LocalContext.current
     val viewModel = appViewModel { EnrollViewModel(it) }
     val state by viewModel.state.collectAsState()
@@ -78,15 +84,18 @@ fun EnrollScreen(onBack: () -> Unit, prefillCode: String = "", prefillName: Stri
     LaunchedEffect(state.saveSuccess) {
         // message lúc này đang giữ employeeCode vừa lưu thành công (xem EnrollViewModel.save()).
         if (state.saveSuccess) {
-            kotlinx.coroutines.delay(3000)
+            kotlinx.coroutines.delay(1500)
             viewModel.consumeSaveSuccess()
+            // Mở từ danh sách Nhân viên ERP (có mã điền sẵn): tự quay về để chọn người kế tiếp.
+            // Mở từ nút "Đăng ký" thường: form đã trống, ở lại đăng ký người tiếp theo luôn.
+            if (prefillCode.isNotBlank()) onSaved()
         }
     }
 
     Scaffold(
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {

@@ -3,6 +3,15 @@ package com.dgpack.chamcong.ui.nav
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.dgpack.chamcong.R
+import com.dgpack.chamcong.ui.pin.AdminLevel
+import com.dgpack.chamcong.ui.pin.AdminPinPolicy
+import com.dgpack.chamcong.ui.pin.AdminSession
+import com.dgpack.chamcong.util.TimeUtils
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -30,6 +39,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val EMPLOYEES = "employees"
     const val LUCKY_DRAW = "lucky_draw"
+    const val ELEVATE = "admin_elevate"
 
     /** Mở Enroll với mã + tên điền sẵn (từ màn Nhân viên ERP). Tên tiếng Việt cần encode. */
     fun enrollWith(code: String, name: String) =
@@ -45,12 +55,17 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
 
         // Phase 2: khoá màn hình quản trị bằng PIN (mục [2]/[12]) — nếu chưa đặt PIN ở
         // Cài đặt, vào thẳng Hàng đợi như Phase 1, không đổi hành vi mặc định.
+        // Hai cấp mật mã (ui/pin/AdminSession.kt): chưa đặt mã cấp 1 thì vào thẳng ở cấp 1
+        // (đồng bộ + đăng ký khuôn mặt); đã đặt thì nhập mã cấp 1 hoặc mã cấp 2 theo ngày
+        // (= ngày × tháng × 2 × 3). Ở cấp 1 vẫn nâng lên cấp 2 được bằng nút ở màn Hàng đợi.
         composable(Routes.ADMIN_GATE) {
             val context = LocalContext.current
             val app = context.applicationContext as ChamCongApplication
             val pin = app.settingsRepository.current().adminPin
+            remember { AdminSession.clear(); true }
 
-            fun enterAdmin() {
+            fun enterAdmin(level: AdminLevel) {
+                AdminSession.set(level)
                 // "Khi đăng nhập" khu quản trị: kéo danh sách NV từ ERP + đồng bộ embedding
                 // (chạy nền, bỏ qua nếu chưa cấu hình API key / không có mạng — xem
                 // EmployeeSyncCoordinator; kết quả hiện ở màn Nhân viên ERP).
@@ -61,18 +76,34 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             }
 
             if (pin.isBlank()) {
-                LaunchedEffect(Unit) { enterAdmin() }
+                LaunchedEffect(Unit) { enterAdmin(AdminLevel.LEVEL_1) }
             } else {
                 PinEntryScreen(
-                    correctPin = pin,
-                    onSuccess = { enterAdmin() },
+                    title = stringResource(R.string.nhap_ma_pin),
+                    validate = { input -> AdminPinPolicy.resolve(input, pin, TimeUtils.vnToday()) },
+                    onSuccess = { level -> enterAdmin(level) },
                     onCancel = { navController.popBackStack() }
                 )
             }
         }
 
+        // Nâng từ cấp 1 lên cấp 2 ngay trong phiên (chỉ nhận mã theo ngày).
+        composable(Routes.ELEVATE) {
+            PinEntryScreen(
+                title = stringResource(R.string.nhap_ma_pin_cap2),
+                validate = { input ->
+                    if (input == AdminPinPolicy.level2Code(TimeUtils.vnToday())) AdminLevel.LEVEL_2 else null
+                },
+                onSuccess = { AdminSession.set(AdminLevel.LEVEL_2); navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+
         composable(Routes.QUEUE) {
+            val level by AdminSession.level.collectAsState()
             QueueScreen(
+                level = level,
+                onElevate = { navController.navigate(Routes.ELEVATE) },
                 onBack = { navController.popBackStack() },
                 onOpenEnroll = { navController.navigate(Routes.ENROLL) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
@@ -98,6 +129,8 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         ) { backStackEntry ->
             EnrollScreen(
                 onBack = { navController.popBackStack() },
+                // Mở từ danh sách Nhân viên ERP: lưu xong tự quay về danh sách để chọn người kế tiếp.
+                onSaved = { navController.popBackStack() },
                 prefillCode = backStackEntry.arguments?.getString(Routes.ENROLL_ARG_CODE).orEmpty(),
                 prefillName = backStackEntry.arguments?.getString(Routes.ENROLL_ARG_NAME).orEmpty()
             )
