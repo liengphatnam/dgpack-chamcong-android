@@ -15,6 +15,8 @@ import kotlinx.coroutines.withContext
 
 const val MIN_ENROLL_SAMPLES = 3
 const val MAX_ENROLL_SAMPLES = 5
+/** Mẫu enroll cần mặt rõ: >= 110 px trong khung 1280x720 (~ đứng cách 0.5–1 m). */
+const val MIN_ENROLL_FACE_WIDTH_PX = 110
 
 data class EnrollUiState(
     val employeeCode: String = "",
@@ -57,6 +59,11 @@ class EnrollViewModel(private val app: ChamCongApplication) : ViewModel() {
 
     /** Gọi liên tục từ camera preview (mỗi khi phát hiện 1 khuôn mặt) để giữ khung hình mới nhất. */
     fun onLiveFaceDetected(result: FaceDetectionResult) {
+        if (result.faceWidthPx < MIN_ENROLL_FACE_WIDTH_PX) {
+            // Mặt quá nhỏ -> mẫu enroll nhoè, sau này nhận nhầm. Bỏ qua, chờ người đứng gần hơn.
+            result.croppedBitmap.recycle()
+            return
+        }
         val previous = lastLiveBitmap
         lastLiveBitmap = result.croppedBitmap
         previous?.recycle()

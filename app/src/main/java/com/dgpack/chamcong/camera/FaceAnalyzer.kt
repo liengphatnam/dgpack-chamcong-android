@@ -8,16 +8,28 @@ import com.dgpack.chamcong.face.ImageUtils
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mlkit.vision.face.FaceLandmark
 
-/** [eyeOpenProbability] = trung bình 2 mắt, null nếu ML Kit không trả về được (hiếm). */
-data class FaceDetectionResult(val croppedBitmap: Bitmap, val eyeOpenProbability: Float?)
+/**
+ * @param croppedBitmap     mặt đã căn chỉnh theo 2 mắt (hoặc crop thô nếu thiếu landmark), 112x112
+ * @param eyeOpenProbability trung bình 2 mắt, null nếu ML Kit không trả về được (hiếm)
+ * @param faceWidthPx       bề rộng khuôn mặt trong khung hình gốc — quá nhỏ = người đứng xa,
+ *                          ảnh phóng to bị nhoè, embedding không đáng tin
+ * @param aligned           true nếu đã căn theo landmark 2 mắt
+ */
+data class FaceDetectionResult(
+    val croppedBitmap: Bitmap,
+    val eyeOpenProbability: Float?,
+    val faceWidthPx: Int,
+    val aligned: Boolean
+)
 
 /**
  * Phân tích khung hình camera: ML Kit chỉ PHÁT HIỆN có khuôn mặt (không biết là ai),
  * throttle xuống ~[targetFps] để tránh nóng máy vô ích trên thiết bị yếu (mục [4.3]).
- * Khi tìm thấy mặt, crop + resize rồi trả về qua [onFaceDetected] để bước sau
- * (FaceEmbedder + FaceMatcher) nhận diện danh tính. Bật classification mode để lấy kèm
- * xác suất mắt mở — dùng cho liveness detection kiểu chớp mắt (Phase 2, mục [12]).
+ * Khi tìm thấy mặt, căn chỉnh theo 2 mắt + resize rồi trả về qua [onFaceDetected] để bước
+ * sau (FaceEmbedder + FaceMatcher) nhận diện danh tính. Bật classification mode để lấy kèm
+ * xác suất mắt mở (liveness chớp mắt) và landmark mode để lấy vị trí 2 mắt (căn chỉnh).
  */
 class FaceAnalyzer(
     private val targetFps: Int = 3,
@@ -30,8 +42,11 @@ class FaceAnalyzer(
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            .setMinFaceSize(0.15f)
+            // Khung phân tích giờ là 1280x720 nên 10% bề rộng ~ 128px — đủ nét để nhận diện,
+            // vẫn thấy được người đứng cách 1.5–2 m.
+            .setMinFaceSize(0.1f)
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
             .build()
     )
 
@@ -61,7 +76,14 @@ class FaceAnalyzer(
                 if (largest != null) {
                     try {
                         val bitmap = ImageUtils.imageProxyToBitmap(imageProxy)
-                        val cropped = ImageUtils.cropAndResizeFace(bitmap, largest.boundingBox)
+                        val leftEye = largest.getLandmark(FaceLandmark.LEFT_EYE)?.position
+                        val rightEye = largest.getLandmark(FaceLandmark.RIGHT_EYE)?.position
+                        val aligned = leftEye != null && rightEye != null
+                        val cropped = if (aligned) {
+                            ImageUtils.alignFace(bitmap, leftEye!!, rightEye!!)
+                        } else {
+                            ImageUtils.cropAndResizeFace(bitmap, largest.boundingBox)
+                        }
                         val leftProb = largest.leftEyeOpenProbability
                         val rightProb = largest.rightEyeOpenProbability
                         val eyeOpenProbability = when {
@@ -70,7 +92,14 @@ class FaceAnalyzer(
                             rightProb != null -> rightProb
                             else -> null
                         }
-                        onFaceDetected(FaceDetectionResult(cropped, eyeOpenProbability))
+                        onFaceDetected(
+                            FaceDetectionResult(
+                                croppedBitmap = cropped,
+                                eyeOpenProbability = eyeOpenProbability,
+                                faceWidthPx = largest.boundingBox.width(),
+                                aligned = aligned
+                            )
+                        )
                     } catch (_: Exception) {
                         // Khung hình lỗi (mặt sát biên, crop rỗng...) — bỏ qua, không crash camera loop.
                     }

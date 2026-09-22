@@ -10,6 +10,8 @@
     <string name="goi_y_chop_mat_format">Xin chào %1$s! Vui lòng chớp mắt để xác nhận</string>
     <string name="chua_nhan_dang_duoc_format">Hệ thống chưa nhận dạng được (%1$d%%)</string>
     <string name="do_tin_cay_format">Độ tin cậy %1$d%%</string>
+    <string name="dung_gan_hon">Vui lòng đứng gần camera hơn</string>
+    <string name="giong_hai_nguoi_format">Chưa phân biệt được, giống 2 người (%1$d%%) — vui lòng nhìn thẳng</string>
 
     <!-- Enroll -->
     <string name="tieu_de_enroll">Đăng ký khuôn mặt nhân viên</string>

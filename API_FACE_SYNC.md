@@ -52,7 +52,7 @@ App đẩy embedding của NV enroll trên thiết bị (mỗi NV **1 vector tru
 ```json
 [
   { "employeeCode": "NV001",
-    "model": "mobilefacenet-192",
+    "model": "mobilefacenet-192-align2",
     "dimension": 192,
     "embedding": [0.0123, -0.0456, ...],      // đúng 192 số
     "enrolledAt": "2026-09-16T01:00:00",      // UTC, lúc chụp trên thiết bị
@@ -83,7 +83,7 @@ Trả về toàn bộ embedding server đang giữ, để tablet khác (hoặc m
 
 ```json
 [
-  { "employeeCode": "NV001", "model": "mobilefacenet-192", "dimension": 192,
+  { "employeeCode": "NV001", "model": "mobilefacenet-192-align2", "dimension": 192,
     "embedding": [0.0123, -0.0456, ...],
     "updatedAt": "2026-09-16T01:00:00", "deviceCode": "Cong-Chinh" }
 ]

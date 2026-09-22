@@ -26,6 +26,15 @@ import java.time.format.DateTimeFormatter
 private const val MAX_RECENT_SCANS = 5
 private const val LIVENESS_TIMEOUT_MS = 6000L
 private const val UNRECOGNIZED_HINT_MS = 1500L
+/** Mặt nhỏ hơn từng này px trong khung 1280x720 = đứng quá xa, ảnh nhoè, không nhận diện. */
+private const val MIN_FACE_WIDTH_PX = 72
+/** Nhất và nhì phải cách nhau >= 5 điểm similarity, nếu không coi như chưa phân biệt được. */
+private const val MIN_MATCH_MARGIN = 0.05f
+/**
+ * Đang chờ chớp mắt: frame nhắm mắt được phép tụt tối đa từng này % dưới ngưỡng. Thấp hơn
+ * nữa là người khác đã bước vào -> không được lấy cái chớp mắt của họ xác nhận cho người trước.
+ */
+private const val LIVENESS_GRACE_PERCENT = 12
 /** Pháo hoa + bảng chúc mừng trúng thưởng hiện bao lâu. */
 private const val CELEBRATION_MS = 12_000L
 private const val TAG = "CameraViewModel"
@@ -46,6 +55,10 @@ data class CameraUiState(
      * -> hiện "Hệ thống chưa nhận dạng được" kèm % cao nhất đo được. null = ẩn.
      */
     val unrecognizedConfidence: Int? = null,
+    /** Kèm [unrecognizedConfidence]: vượt ngưỡng nhưng giống 2 người quá sát nhau. */
+    val ambiguous: Boolean = false,
+    /** Có mặt nhưng quá nhỏ (đứng xa) — nhắc đứng gần hơn, không nhận diện. */
+    val tooFar: Boolean = false,
     val pendingCount: Int = 0,
     val recentScans: List<RecentScan> = emptyList(),
     /** Khác null = đang bắn pháo hoa chúc mừng người trúng thưởng lon nước ngọt. */
@@ -60,6 +73,7 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
 
     private var hideOverlayJob: Job? = null
     private var hideUnrecognizedJob: Job? = null
+    private var hideTooFarJob: Job? = null
     private var hideCelebrationJob: Job? = null
     private val voiceAnnouncer = VoiceAnnouncer(app)
 
@@ -83,6 +97,14 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
     fun onFaceDetected(result: FaceDetectionResult) {
         viewModelScope.launch(faceProcessingDispatcher) {
             try {
+                if (result.faceWidthPx < MIN_FACE_WIDTH_PX) {
+                    // Mặt quá nhỏ -> ảnh phóng to bị nhoè, embedding không đáng tin (dễ nhận
+                    // nhầm). Không so khớp, chỉ nhắc đứng gần hơn.
+                    showTooFarHint()
+                    return@launch
+                }
+                clearTooFarHint()
+
                 val embedding = app.faceEmbedder.embed(result.croppedBitmap)
                 val settings = app.settingsRepository.current()
                 val best = FaceMatcher.findBestMatch(
@@ -90,16 +112,23 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
                     enrolled = app.employeeRepository.matchCache.value
                 )
                 val minPercent = settings.minConfidencePercent
+                val frameConfident = best != null && best.isConfident(minPercent)
                 when {
-                    best != null && best.isConfident(minPercent) -> {
+                    frameConfident && best!!.isAmbiguous(MIN_MATCH_MARGIN) -> {
+                        // Vượt ngưỡng nhưng người nhì cũng sát nút -> không dám kết luận.
+                        showUnrecognizedHint(best.confidencePercent, ambiguous = true)
+                    }
+                    frameConfident -> {
                         clearUnrecognizedHint()
-                        handleMatchedFace(best, result.eyeOpenProbability, settings)
+                        handleMatchedFace(best!!, result.eyeOpenProbability, settings, frameConfident = true)
                     }
                     // Đang chờ chớp mắt của đúng người này: frame mắt nhắm thường làm
-                    // similarity tụt tạm thời. Danh tính đã được xác nhận >= ngưỡng ở frame
-                    // trước nên vẫn nạp mẫu mắt để hoàn tất liveness, không báo "chưa nhận dạng".
-                    best != null && candidateCode == best.employeeCode -> {
-                        handleMatchedFace(best, result.eyeOpenProbability, settings)
+                    // similarity tụt tạm thời. Vẫn nạp mẫu mắt để hoàn tất liveness, nhưng chỉ
+                    // trong biên độ LIVENESS_GRACE_PERCENT — tụt sâu hơn nghĩa là người khác đã
+                    // đứng vào, không được lấy chớp mắt của họ ghi công cho người trước.
+                    best != null && candidateCode == best.employeeCode &&
+                        best.confidencePercent >= minPercent - LIVENESS_GRACE_PERCENT -> {
+                        handleMatchedFace(best, result.eyeOpenProbability, settings, frameConfident = false)
                     }
                     else -> {
                         // Quy tắc nghiệp vụ: chưa đạt độ tin cậy tối thiểu -> KHÔNG ghi sự kiện,
@@ -114,10 +143,20 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
         }
     }
 
-    /** Chạy trên [faceProcessingDispatcher] — KHÔNG gọi trực tiếp từ luồng khác. */
-    private suspend fun handleMatchedFace(match: MatchResult, eyeOpenProbability: Float?, settings: AppSettings) {
+    /**
+     * Chạy trên [faceProcessingDispatcher] — KHÔNG gọi trực tiếp từ luồng khác.
+     * [frameConfident] = frame hiện tại tự nó đạt ngưỡng (không phải chỉ "đang chờ chớp mắt").
+     * Chỉ ghi công ở một frame ĐẠT NGƯỠNG: chớp mắt xong ở frame mờ thì đợi frame rõ mặt kế tiếp.
+     */
+    private suspend fun handleMatchedFace(
+        match: MatchResult,
+        eyeOpenProbability: Float?,
+        settings: AppSettings,
+        frameConfident: Boolean
+    ) {
         val employeeCode = match.employeeCode
         if (candidateCode != employeeCode) {
+            if (!frameConfident) return // bắt đầu lượt mới phải từ 1 frame đạt ngưỡng
             candidateCode = employeeCode
             livenessTracker = LivenessTracker()
         }
@@ -126,7 +165,8 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
 
         if (eyeOpenProbability == null) {
             // Thiết bị/tình huống hiếm không có xác suất mắt — bỏ qua kiểm tra liveness,
-            // không chặn chấm công vì lý do kỹ thuật ngoài ý muốn.
+            // không chặn chấm công vì lý do kỹ thuật ngoài ý muốn (nhưng vẫn cần frame đạt ngưỡng).
+            if (!frameConfident) return
             clearLivenessHint()
             confirmAttendance(employeeCode, name, match.confidencePercent, settings)
             return
@@ -134,7 +174,7 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
 
         livenessTracker.onEyeOpenSample(eyeOpenProbability)
 
-        if (livenessTracker.isConfirmed) {
+        if (livenessTracker.isConfirmed && frameConfident) {
             clearLivenessHint()
             confirmAttendance(employeeCode, name, match.confidencePercent, settings)
             candidateCode = null // lần chấm công tiếp theo (khác lượt) cần chớp mắt lại
@@ -199,20 +239,34 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
         }
     }
 
-    private fun showUnrecognizedHint(confidence: Int) {
-        _uiState.value = _uiState.value.copy(unrecognizedConfidence = confidence)
+    private fun showTooFarHint() {
+        if (!_uiState.value.tooFar) _uiState.value = _uiState.value.copy(tooFar = true)
+        hideTooFarJob?.cancel()
+        hideTooFarJob = viewModelScope.launch {
+            delay(UNRECOGNIZED_HINT_MS)
+            _uiState.value = _uiState.value.copy(tooFar = false)
+        }
+    }
+
+    private fun clearTooFarHint() {
+        hideTooFarJob?.cancel()
+        if (_uiState.value.tooFar) _uiState.value = _uiState.value.copy(tooFar = false)
+    }
+
+    private fun showUnrecognizedHint(confidence: Int, ambiguous: Boolean = false) {
+        _uiState.value = _uiState.value.copy(unrecognizedConfidence = confidence, ambiguous = ambiguous)
         hideUnrecognizedJob?.cancel()
         hideUnrecognizedJob = viewModelScope.launch {
             // Tự ẩn sau khi người rời đi — mỗi frame chưa đạt ngưỡng sẽ gia hạn lại.
             delay(UNRECOGNIZED_HINT_MS)
-            _uiState.value = _uiState.value.copy(unrecognizedConfidence = null)
+            _uiState.value = _uiState.value.copy(unrecognizedConfidence = null, ambiguous = false)
         }
     }
 
     private fun clearUnrecognizedHint() {
         hideUnrecognizedJob?.cancel()
         if (_uiState.value.unrecognizedConfidence != null) {
-            _uiState.value = _uiState.value.copy(unrecognizedConfidence = null)
+            _uiState.value = _uiState.value.copy(unrecognizedConfidence = null, ambiguous = false)
         }
     }
 

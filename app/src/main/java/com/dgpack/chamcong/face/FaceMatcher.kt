@@ -9,12 +9,25 @@ data class EnrolledFace(val employeeCode: String, val embedding: FloatArray)
  * [confidencePercent] là similarity quy đổi sang thang 0–100% để hiển thị cho người
  * dùng và so với ngưỡng "độ tin cậy tối thiểu" cấu hình ở Cài đặt (mặc định 80%).
  */
-data class MatchResult(val employeeCode: String, val similarity: Float) {
+data class MatchResult(
+    val employeeCode: String,
+    val similarity: Float,
+    /** Similarity của người đứng NHÌ (null nếu chỉ enroll 1 người) — để phát hiện "giống 2 người". */
+    val runnerUpSimilarity: Float? = null
+) {
     val confidencePercent: Int
         get() = FaceMatcher.toConfidencePercent(similarity)
 
     /** Quy tắc nghiệp vụ: chỉ coi là nhận diện ĐƯỢC khi độ tin cậy >= [minPercent]. */
     fun isConfident(minPercent: Int): Boolean = confidencePercent >= minPercent
+
+    /**
+     * Người đứng nhất và nhì quá sát nhau (< [minMargin] similarity) -> không đủ chắc là ai,
+     * dù người nhất có vượt ngưỡng. Đây là lớp chặn nhận nhầm giữa 2 người giống nhau
+     * (anh em, cùng dáng mặt) hoặc khi embedding kém chất lượng (ảnh nhoè, crop lệch).
+     */
+    fun isAmbiguous(minMargin: Float): Boolean =
+        runnerUpSimilarity != null && similarity - runnerUpSimilarity < minMargin
 }
 
 /**
@@ -55,14 +68,22 @@ object FaceMatcher {
      * độ tin cậy thay vì im lặng.
      */
     fun findBestMatch(query: FloatArray, enrolled: List<EnrolledFace>): MatchResult? {
-        var best: MatchResult? = null
+        var bestCode: String? = null
+        var bestSim = Float.NEGATIVE_INFINITY
+        var runnerUp: Float? = null
         for (candidate in enrolled) {
             val sim = cosineSimilarity(query, candidate.embedding)
-            if (best == null || sim > best.similarity) {
-                best = MatchResult(candidate.employeeCode, sim)
+            when {
+                sim > bestSim -> {
+                    if (bestCode != null) runnerUp = bestSim
+                    bestCode = candidate.employeeCode
+                    bestSim = sim
+                }
+                runnerUp == null || sim > runnerUp -> runnerUp = sim
             }
         }
-        return best
+        val code = bestCode ?: return null
+        return MatchResult(code, bestSim, runnerUp)
     }
 
     /**

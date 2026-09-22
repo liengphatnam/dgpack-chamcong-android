@@ -97,6 +97,10 @@ data class FaceEmbeddingDownloadDto(
 )
 
 object FaceModelInfo {
-    /** Tên model hiện app dùng (MobileFaceNet, 192 chiều) — đổi model thì đổi tên này. */
-    const val MODEL_NAME = "mobilefacenet-192"
+    /**
+     * Tên model hiện app dùng (MobileFaceNet, 192 chiều) — đổi model HOẶC đổi cách tiền xử lý
+     * (crop/căn chỉnh) thì đổi tên này, vì embedding sinh ra không so sánh chéo được.
+     * "align2": mặt được căn theo 2 mắt về mẫu ArcFace (ImageUtils.alignFace) thay vì crop thô.
+     */
+    const val MODEL_NAME = "mobilefacenet-192-align2"
 }

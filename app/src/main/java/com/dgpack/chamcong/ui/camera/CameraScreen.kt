@@ -150,6 +150,25 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                 }
             }
 
+            // Mặt quá nhỏ trong khung hình (đứng xa) — không nhận diện, nhắc đứng gần hơn.
+            AnimatedVisibility(
+                visible = uiState.tooFar && uiState.overlayName == null && uiState.livenessHintName == null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.dung_gan_hon),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+            }
+
             // Có mặt trước camera nhưng độ tin cậy < ngưỡng (mặc định 80%) — báo rõ để
             // người đứng trước camera biết máy CHƯA nhận, không ghi sự kiện.
             AnimatedVisibility(
@@ -163,7 +182,8 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                 ) {
                     Text(
                         text = stringResource(
-                            R.string.chua_nhan_dang_duoc_format,
+                            if (uiState.ambiguous) R.string.giong_hai_nguoi_format
+                            else R.string.chua_nhan_dang_duoc_format,
                             uiState.unrecognizedConfidence ?: 0
                         ),
                         style = MaterialTheme.typography.titleLarge,

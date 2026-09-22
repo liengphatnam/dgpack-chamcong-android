@@ -79,8 +79,8 @@ class EmployeeSyncEngineTest {
             MockResponse().setResponseCode(200).setBody(
                 """
                 [
-                  {"employeeCode":"NV002","model":"mobilefacenet-192","dimension":192,"embedding":[${vec(0.5f)}],"updatedAt":"2026-09-10T00:00:00","deviceCode":"Cong-Chinh"},
-                  {"employeeCode":"NV003","model":"mobilefacenet-192","dimension":192,"embedding":[${vec(0.25f)}],"updatedAt":"2026-09-12T00:00:00","deviceCode":"Cong-Phu"},
+                  {"employeeCode":"NV002","model":"mobilefacenet-192-align2","dimension":192,"embedding":[${vec(0.5f)}],"updatedAt":"2026-09-10T00:00:00","deviceCode":"Cong-Chinh"},
+                  {"employeeCode":"NV003","model":"mobilefacenet-192-align2","dimension":192,"embedding":[${vec(0.25f)}],"updatedAt":"2026-09-12T00:00:00","deviceCode":"Cong-Phu"},
                   {"employeeCode":"NV009","model":"other-model-512","dimension":512,"embedding":[${vec(0.1f)}],"updatedAt":"2026-09-12T00:00:00","deviceCode":null}
                 ]
                 """.trimIndent()
@@ -121,7 +121,7 @@ class EmployeeSyncEngineTest {
         assertEquals("/api/v1/attendance/face-embeddings", r2.path)
         val body = r2.body.readUtf8()
         assertTrue(body.contains("\"employeeCode\":\"NV001\""))
-        assertTrue(body.contains("\"model\":\"mobilefacenet-192\""))
+        assertTrue(body.contains("\"model\":\"mobilefacenet-192-align2\""))
         assertTrue(body.contains("\"dimension\":192"))
         assertTrue(body.contains("\"enrolledAt\":\"2026-09-16T01:00:00\""))
         assertTrue(body.contains("\"deviceCode\":\"Cong-Chinh\""))
@@ -155,7 +155,7 @@ class EmployeeSyncEngineTest {
         server.enqueue(MockResponse().setResponseCode(200).setBody("""[{"employeeCode":"NVLA","status":"UnknownEmployee"}]"""))
         server.enqueue(
             MockResponse().setResponseCode(200).setBody(
-                """[{"employeeCode":"NVLA","model":"mobilefacenet-192","dimension":192,"embedding":[${vec(0.9f)}],"updatedAt":"2026-09-20T00:00:00"}]"""
+                """[{"employeeCode":"NVLA","model":"mobilefacenet-192-align2","dimension":192,"embedding":[${vec(0.9f)}],"updatedAt":"2026-09-20T00:00:00"}]"""
             )
         )
 

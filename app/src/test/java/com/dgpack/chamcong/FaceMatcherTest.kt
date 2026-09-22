@@ -106,4 +106,24 @@ class FaceMatcherTest {
         assertEquals(1f, norm, 1e-5f)
         assertEquals(1f, avg[0], 1e-5f)
     }
+
+    @Test
+    fun `findBestMatch tra ve similarity nguoi dung nhi de phat hien giong 2 nguoi`() {
+        val enrolled = listOf(
+            EnrolledFace("NV001", floatArrayOf(1f, 0f)),
+            EnrolledFace("NV002", floatArrayOf(0.98f, 0.2f)),
+            EnrolledFace("NV003", floatArrayOf(0f, 1f))
+        )
+        val result = FaceMatcher.findBestMatch(floatArrayOf(1f, 0f), enrolled)!!
+        assertEquals("NV001", result.employeeCode)
+        assertEquals(1.0f, result.similarity, 1e-4f)
+        // NV002 ~ 0.98 -> chỉ cách 0.02 < 0.05 -> mơ hồ, không được kết luận
+        assertTrue(result.isAmbiguous(0.05f))
+        assertFalse(result.isAmbiguous(0.01f))
+
+        // Chỉ enroll 1 người -> không có người nhì -> không mơ hồ
+        val single = FaceMatcher.findBestMatch(floatArrayOf(1f, 0f), enrolled.take(1))!!
+        assertEquals(null, single.runnerUpSimilarity)
+        assertFalse(single.isAmbiguous(0.05f))
+    }
 }

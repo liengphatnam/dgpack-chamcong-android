@@ -51,8 +51,11 @@ fun FaceCameraPreview(
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
+                // 640x480 quá thấp: người đứng cách 1.5 m mặt chỉ ~50 px, phóng lên 112 px bị
+                // nhoè -> embedding mọi người na ná nhau -> nhận nhầm. 1280x720 cho mặt ~100–150 px,
+                // vẫn nhẹ vì đã throttle 3 fps. Thiết bị không hỗ trợ sẽ tự chọn mức gần nhất.
                 val analysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(640, 480))
+                    .setTargetResolution(Size(1280, 720))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                 analysis.setAnalyzer(analysisExecutor, FaceAnalyzer(targetFps = targetFps, onFaceDetected = onFaceDetected))
