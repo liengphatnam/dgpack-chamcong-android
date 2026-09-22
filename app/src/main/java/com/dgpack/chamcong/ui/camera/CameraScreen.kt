@@ -285,7 +285,7 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
         ) {
             Text(
-                text = "v${BuildConfig.VERSION_NAME}",
+                text = "v${BuildConfig.VERSION_NAME}" + (uiState.perfLabel?.let { "  ·  $it" } ?: ""),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

@@ -23,7 +23,9 @@ data class FaceDetectionResult(
     val croppedBitmap: Bitmap,
     val eyeOpenProbability: Float?,
     val faceWidthPx: Int,
-    val aligned: Boolean
+    val aligned: Boolean,
+    /** Thời gian ML Kit phát hiện mặt + chuẩn bị ảnh cho frame này (ms) — hiện lên màn hình để chẩn đoán máy chậm. */
+    val detectMs: Long
 )
 
 /**
@@ -39,7 +41,13 @@ class FaceAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     private val minIntervalMs = 1000L / targetFps
-    private var lastProcessedAt = 0L
+    /**
+     * Mốc HOÀN TẤT frame trước (không phải mốc bắt đầu). Nếu ML Kit mất 400 ms trên máy yếu
+     * mà tính từ lúc bắt đầu thì frame kế tiếp chạy ngay khi frame trước vừa xong -> CPU 100%
+     * liên tục, preview giật. Tính từ lúc xong đảm bảo luôn có khoảng nghỉ >= minIntervalMs.
+     */
+    @Volatile private var lastCompletedAt = 0L
+    @Volatile private var busy = false
 
     private companion object {
         /** Vùng chuyển sang bitmap = bounding box mở rộng thêm 60% mỗi phía. */
@@ -49,9 +57,9 @@ class FaceAnalyzer(
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            // Khung phân tích giờ là 1280x720 nên 10% bề rộng ~ 128px — đủ nét để nhận diện,
-            // vẫn thấy được người đứng cách 1.5–2 m.
-            .setMinFaceSize(0.1f)
+            // minFaceSize càng nhỏ ML Kit càng phải quét nhiều tầng -> càng nặng. 12% của
+            // khung 600 px (dọc) ~ 72 px: đúng bằng ngưỡng mặt tối thiểu để nhận diện.
+            .setMinFaceSize(0.12f)
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
             .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
             .build()
@@ -60,7 +68,7 @@ class FaceAnalyzer(
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(imageProxy: ImageProxy) {
         val now = System.currentTimeMillis()
-        if (now - lastProcessedAt < minIntervalMs) {
+        if (busy || now - lastCompletedAt < minIntervalMs) {
             imageProxy.close()
             return
         }
@@ -69,7 +77,8 @@ class FaceAnalyzer(
             imageProxy.close()
             return
         }
-        lastProcessedAt = now
+        busy = true
+        val startedAt = now
 
         val rotation = imageProxy.imageInfo.rotationDegrees
         val inputImage = InputImage.fromMediaImage(mediaImage, rotation)
@@ -121,7 +130,8 @@ class FaceAnalyzer(
                                 croppedBitmap = cropped,
                                 eyeOpenProbability = eyeOpenProbability,
                                 faceWidthPx = largest.boundingBox.width(),
-                                aligned = aligned
+                                aligned = aligned,
+                                detectMs = System.currentTimeMillis() - startedAt
                             )
                         )
                     } catch (_: Exception) {
@@ -131,6 +141,8 @@ class FaceAnalyzer(
             }
             .addOnCompleteListener {
                 imageProxy.close()
+                lastCompletedAt = System.currentTimeMillis()
+                busy = false
             }
     }
 }

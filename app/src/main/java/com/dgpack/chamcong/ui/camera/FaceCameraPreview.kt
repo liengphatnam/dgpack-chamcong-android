@@ -51,11 +51,12 @@ fun FaceCameraPreview(
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
-                // 640x480 quá thấp: người đứng cách 1.5 m mặt chỉ ~50 px, phóng lên 112 px bị
-                // nhoè -> embedding mọi người na ná nhau -> nhận nhầm. 1280x720 cho mặt ~100–150 px,
-                // vẫn nhẹ vì đã throttle 3 fps. Thiết bị không hỗ trợ sẽ tự chọn mức gần nhất.
+                // 640x480 hơi thấp (mặt xa bị nhoè), nhưng 1280x720 làm tablet yếu (MFISO B1 PRO)
+                // giật hẳn: camera HAL phải xuất thêm 1 luồng 720p song song với preview và ML Kit
+                // phải quét gấp 3 lần số pixel. 800x600 (đúng tỉ lệ 4:3 của cảm biến) là mức
+                // cân bằng — mặt cách 1 m ~70 px, đủ cho model. Máy không hỗ trợ sẽ tự chọn gần nhất.
                 val analysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(1280, 720))
+                    .setTargetResolution(Size(800, 600))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                 analysis.setAnalyzer(analysisExecutor, FaceAnalyzer(targetFps = targetFps, onFaceDetected = onFaceDetected))

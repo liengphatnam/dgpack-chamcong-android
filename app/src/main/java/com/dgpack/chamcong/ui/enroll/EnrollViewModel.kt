@@ -15,8 +15,8 @@ import kotlinx.coroutines.withContext
 
 const val MIN_ENROLL_SAMPLES = 3
 const val MAX_ENROLL_SAMPLES = 5
-/** Mẫu enroll cần mặt rõ: >= 110 px trong khung 1280x720 (~ đứng cách 0.5–1 m). */
-const val MIN_ENROLL_FACE_WIDTH_PX = 110
+/** Mẫu enroll cần mặt rõ: >= 90 px trong khung 800x600 (~ đứng cách 0.5–0.8 m). */
+const val MIN_ENROLL_FACE_WIDTH_PX = 90
 
 data class EnrollUiState(
     val employeeCode: String = "",

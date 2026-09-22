@@ -27,7 +27,9 @@ class FaceEmbedder(context: Context) : Closeable {
 
     init {
         val model = FileUtil.loadMappedFile(context, MODEL_FILE)
-        interpreter = Interpreter(model, Interpreter.Options().apply { setNumThreads(4) })
+        // 2 luồng thay vì 4: tablet 4 nhân yếu, ML Kit + camera + UI cũng cần CPU; 4 luồng
+        // TFLite làm preview giật mà embedding chỉ nhanh hơn không đáng kể.
+        interpreter = Interpreter(model, Interpreter.Options().apply { setNumThreads(2) })
     }
 
     /** [bitmap] phải đã được crop quanh khuôn mặt và resize đúng 112x112 trước khi gọi. */

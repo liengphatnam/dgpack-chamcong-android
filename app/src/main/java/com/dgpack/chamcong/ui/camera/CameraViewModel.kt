@@ -26,8 +26,8 @@ import java.time.format.DateTimeFormatter
 private const val MAX_RECENT_SCANS = 5
 private const val LIVENESS_TIMEOUT_MS = 6000L
 private const val UNRECOGNIZED_HINT_MS = 1500L
-/** Mặt nhỏ hơn từng này px trong khung 1280x720 = đứng quá xa, ảnh nhoè, không nhận diện. */
-private const val MIN_FACE_WIDTH_PX = 72
+/** Mặt nhỏ hơn từng này px trong khung 800x600 = đứng quá xa, ảnh nhoè, không nhận diện. */
+private const val MIN_FACE_WIDTH_PX = 60
 /** Nhất và nhì phải cách nhau >= 5 điểm similarity, nếu không coi như chưa phân biệt được. */
 private const val MIN_MATCH_MARGIN = 0.05f
 /**
@@ -60,6 +60,8 @@ data class CameraUiState(
     /** Có mặt nhưng quá nhỏ (đứng xa) — nhắc đứng gần hơn, không nhận diện. */
     val tooFar: Boolean = false,
     val pendingCount: Int = 0,
+    /** "phát hiện 180 ms · nhận diện 60 ms" — để chẩn đoán máy chậm từ xa, hiện cạnh số phiên bản. */
+    val perfLabel: String? = null,
     val recentScans: List<RecentScan> = emptyList(),
     /** Khác null = đang bắn pháo hoa chúc mừng người trúng thưởng lon nước ngọt. */
     val celebration: Celebration? = null
@@ -105,7 +107,12 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
                 }
                 clearTooFarHint()
 
+                val embedStart = System.currentTimeMillis()
                 val embedding = app.faceEmbedder.embed(result.croppedBitmap)
+                val embedMs = System.currentTimeMillis() - embedStart
+                _uiState.value = _uiState.value.copy(
+                    perfLabel = "phát hiện ${result.detectMs} ms · nhận diện $embedMs ms · mặt ${result.faceWidthPx} px"
+                )
                 val settings = app.settingsRepository.current()
                 val best = FaceMatcher.findBestMatch(
                     query = embedding,
