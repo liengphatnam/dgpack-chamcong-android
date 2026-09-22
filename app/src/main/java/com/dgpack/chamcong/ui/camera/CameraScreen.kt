@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -64,7 +65,12 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // Camera + khung tròn phủ kín màn hình; MỌI thứ hiển thị khác (tên, cảnh báo, pháo hoa,
+        // nút quản trị, danh sách vừa chấm, version) gom vào vùng chừa 10% trên và 10% dưới để
+        // không bị thanh trạng thái / nút điều hướng của điện thoại che khuất.
+        val edgeInset = maxHeight * 0.10f
+
         if (hasCameraPermission) {
             FaceCameraPreview(targetFps = 3, onFaceDetected = viewModel::onFaceDetected)
             // Khung tròn hướng dẫn đặt mặt (cùng vị trí với màn Đăng ký). Viền đổi màu theo
@@ -97,6 +103,7 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             }
         }
 
+        Box(modifier = Modifier.fillMaxSize().padding(top = edgeInset, bottom = edgeInset)) {
         // Trúng thưởng lon nước ngọt (tháng 8–9/2026): pháo hoa toàn màn hình + bảng chúc mừng
         // giữa màn, hướng dẫn liên hệ nhân sự. Đặt TRƯỚC các nút để nút quản trị vẫn bấm được.
         uiState.celebration?.let { celebration ->
@@ -291,5 +298,6 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
+        } // vùng chừa 10% trên/dưới
     }
 }
