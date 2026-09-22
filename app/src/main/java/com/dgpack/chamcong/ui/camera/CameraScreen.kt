@@ -130,25 +130,9 @@ fun CameraScreen(onOpenAdmin: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Phase 2 (mục [12]): gợi ý chớp mắt để xác nhận chống giả mạo — hiện trong
-            // lúc chờ, trước khi ghi nhận chấm công thành công.
-            AnimatedVisibility(
-                visible = uiState.livenessHintName != null,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.goi_y_chop_mat_format, uiState.livenessHintName ?: ""),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
-                }
-            }
+            // Chống giả mạo bằng chớp mắt vẫn chạy ngầm (CameraViewModel/LivenessTracker) nhưng
+            // KHÔNG hiện khung "vui lòng chớp mắt" nữa theo yêu cầu vận hành: người đứng trước
+            // máy chớp mắt tự nhiên là tự chấm công; không nhận ra thì chỉ báo "chưa nhận dạng được".
 
             // Mặt quá nhỏ trong khung hình (đứng xa) — không nhận diện, nhắc đứng gần hơn.
             AnimatedVisibility(
