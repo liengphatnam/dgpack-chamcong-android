@@ -4,22 +4,50 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Biểu tượng khuôn mặt đơn giản, tâm nằm trong vùng an toàn 66dp của adaptive icon -->
+    <!-- Thẻ nhân viên (chấm công thẻ từ) trong vùng an toàn 66dp của adaptive icon:
+         thẻ trắng bo góc, dải xanh trên đầu, ảnh đại diện tròn bên trái, 2 dòng chữ bên phải,
+         huy hiệu tick xanh lá góc dưới phải. VectorDrawable không có <circle> — vẽ bằng arc. -->
+
+    <!-- Thân thẻ (bóng đổ nhẹ + thẻ trắng) -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M28,36.5h52a6,6 0 0 1 6,6v27a6,6 0 0 1 -6,6H28a6,6 0 0 1 -6,-6v-27a6,6 0 0 1 6,-6z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,29c-11.6,0 -21,9.4 -21,21c0,16 21,29 21,29s21,-13 21,-29C75,38.4 65.6,29 54,29z" />
+        android:pathData="M27,34h52a6,6 0 0 1 6,6v27a6,6 0 0 1 -6,6H27a6,6 0 0 1 -6,-6V40a6,6 0 0 1 6,-6z" />
+
+    <!-- Dải màu trên đầu thẻ -->
     <path
         android:fillColor="#1B5E20"
-        android:pathData="M54,37c-7.2,0 -13,5.8 -13,13c0,7.2 13,16 13,16s13,-8.8 13,-16C67,42.8 61.2,37 54,37z" />
-    <!-- VectorDrawable của Android không hỗ trợ thẻ <circle> (chỉ SVG mới có) — vẽ 2 mắt
-         bằng <path> với lệnh arc thay vì cx/cy/r. -->
+        android:pathData="M27,34h52a6,6 0 0 1 6,6v3H21v-3a6,6 0 0 1 6,-6z" />
+
+    <!-- Ảnh đại diện: vòng tròn + đầu + vai -->
+    <path
+        android:fillColor="#E8F5E9"
+        android:pathData="M29,55a9,9 0 1 0 18,0a9,9 0 1 0 -18,0z" />
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M34.8,52.2a3.2,3.2 0 1 0 6.4,0a3.2,3.2 0 1 0 -6.4,0z" />
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M31.5,61.2c1.2,-3 3.6,-4.6 6.5,-4.6s5.3,1.6 6.5,4.6c-1.7,1.6 -4,2.6 -6.5,2.6s-4.8,-1 -6.5,-2.6z" />
+
+    <!-- 2 dòng thông tin -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M52,50h24a1.8,1.8 0 0 1 0,3.6H52a1.8,1.8 0 0 1 0,-3.6z" />
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M52,57.5h17a1.8,1.8 0 0 1 0,3.6H52a1.8,1.8 0 0 1 0,-3.6z" />
+
+    <!-- Huy hiệu tick xanh lá góc dưới phải -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M45.6,49a2.4,2.4 0 1,0 4.8,0a2.4,2.4 0 1,0 -4.8,0z" />
+        android:pathData="M67,68a10,10 0 1 0 20,0a10,10 0 1 0 -20,0z" />
+    <path
+        android:fillColor="#2ECC71"
+        android:pathData="M68.5,68a8.5,8.5 0 1 0 17,0a8.5,8.5 0 1 0 -17,0z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M57.6,49a2.4,2.4 0 1,0 4.8,0a2.4,2.4 0 1,0 -4.8,0z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M47,57c1.8,2.2 4.2,3.4 7,3.4c2.8,0 5.2,-1.2 7,-3.4c0.4,-0.5 -0.3,-1.1 -0.8,-0.7c-1.6,1.6 -3.8,2.5 -6.2,2.5c-2.4,0 -4.6,-0.9 -6.2,-2.5C47.3,55.9 46.6,56.5 47,57z" />
+        android:pathData="M72.6,68.2l1.9,-1.9l2.3,2.3l4.7,-4.7l1.9,1.9l-6.6,6.6z" />
 </vector>

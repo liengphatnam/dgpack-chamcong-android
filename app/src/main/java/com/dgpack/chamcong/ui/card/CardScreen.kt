@@ -143,16 +143,6 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
                 if (state.pendingCount > 0) {
                     Chip(text = stringResource(R.string.cho_dong_bo_format, state.pendingCount))
                 }
-                if (state.recentScans.isNotEmpty() && state.phase == CardPhase.IDLE) {
-                    Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f), shape = RoundedCornerShape(8.dp)) {
-                        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-                            Text(stringResource(R.string.vua_cham_cong), style = MaterialTheme.typography.labelLarge)
-                            state.recentScans.forEach { scan ->
-                                Text("${scan.timeLabel}  ${scan.fullName}", style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
-                }
             }
 
             Surface(
@@ -165,16 +155,31 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
                 }
             }
 
-            Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                shape = RoundedCornerShape(6.dp),
-                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
+            // Góc dưới trái: 5 người vừa chấm + số phiên bản (để không che đồng hồ ở giữa màn hình).
+            Column(
+                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME}",
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
+                if (state.recentScans.isNotEmpty() && state.phase == CardPhase.IDLE) {
+                    Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f), shape = RoundedCornerShape(8.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text(stringResource(R.string.vua_cham_cong), style = MaterialTheme.typography.labelLarge)
+                            state.recentScans.forEach { scan ->
+                                Text("${scan.timeLabel}  ${scan.fullName}", style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = "v${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
     }

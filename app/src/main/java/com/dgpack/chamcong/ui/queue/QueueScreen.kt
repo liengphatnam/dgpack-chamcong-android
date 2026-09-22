@@ -42,9 +42,7 @@ fun QueueScreen(
     level: AdminLevel,
     onElevate: () -> Unit,
     onBack: () -> Unit,
-    onOpenEnroll: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEmployees: () -> Unit,
     onOpenAssignCard: () -> Unit,
     onOpenLuckyDraw: () -> Unit,
     onOpenForgotLog: () -> Unit
@@ -99,18 +97,17 @@ fun QueueScreen(
                         Text(stringResource(R.string.nut_thu_lai_unknown))
                     }
                 }
-                Button(onClick = onOpenAssignCard) { Text(stringResource(R.string.nut_gan_the)) }
-                OutlinedButton(onClick = onOpenEnroll) { Text(stringResource(R.string.tieu_de_enroll)) }
-                OutlinedButton(onClick = onOpenEmployees) {
+                Button(onClick = onOpenAssignCard) {
                     Text(
-                        if (state.missingFaceCount > 0) stringResource(R.string.nut_nhan_vien_format, state.missingFaceCount)
-                        else stringResource(R.string.tieu_de_nhan_vien)
+                        if (state.missingCardCount > 0) stringResource(R.string.nut_gan_the_format, state.missingCardCount)
+                        else stringResource(R.string.nut_gan_the)
                     )
                 }
-                // Cấp 1 chỉ được đồng bộ + đăng ký khuôn mặt; sổ trúng thưởng và cài đặt cần cấp 2.
+                // Cấp 1: đồng bộ, gán thẻ, XEM sổ trúng thưởng + nhật ký quên thẻ (chỉ đọc).
+                // Cấp 2: thêm Cài đặt và đánh dấu "Đã phát" ở sổ trúng thưởng.
+                OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
+                OutlinedButton(onClick = onOpenForgotLog) { Text(stringResource(R.string.nut_nhat_ky_quen_the)) }
                 if (level == AdminLevel.LEVEL_2) {
-                    OutlinedButton(onClick = onOpenForgotLog) { Text(stringResource(R.string.nut_nhat_ky_quen_the)) }
-                    OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
                     OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
                 } else {
                     OutlinedButton(onClick = onElevate) { Text(stringResource(R.string.nut_mat_ma_cap_2)) }

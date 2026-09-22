@@ -1,6 +1,5 @@
 package com.dgpack.chamcong
 
-import com.dgpack.chamcong.data.db.EnrolledEmployeeEntity
 import com.dgpack.chamcong.data.db.ErpEmployeeEntity
 import com.dgpack.chamcong.data.db.LuckyDrawReason
 import com.dgpack.chamcong.data.db.LuckyDrawWinEntity
@@ -26,7 +25,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 /**
  * Bước 4 của EmployeeSyncEngine: đẩy sổ trúng thưởng lên ERP + đọc 3 trường mới
  * (birthDate/lateEarlyCount30d/commendationCount) từ GET employees. Server chưa có
- * endpoint lucky-draws (404) thì 3 bước chính vẫn Completed, sổ giữ Pending.
+ * endpoint lucky-draws (404) thì bước chính vẫn Completed, sổ giữ Pending.
  */
 class LuckyDrawSyncTest {
 
@@ -52,7 +51,6 @@ class LuckyDrawSyncTest {
 
     private fun enqueueMainSteps(employeesJson: String) {
         server.enqueue(MockResponse().setResponseCode(200).setBody(employeesJson)) // 1. employees
-        server.enqueue(MockResponse().setResponseCode(200).setBody("[]"))          // 3. GET embeddings (bước 2 không có gì để đẩy)
     }
 
     @Test
@@ -77,7 +75,7 @@ class LuckyDrawSyncTest {
                 """.trimIndent()
             )
         )
-        val employees = FakeSource()
+        val employees = FakeEmployeeSource()
         val draws = FakeLuckyDrawSource(
             listOf(
                 win(1, "NV001", "2026-08-20", "2026-08-20T01:00:00", 3, LuckyDrawReason.BIRTHDAY),
@@ -102,8 +100,8 @@ class LuckyDrawSyncTest {
         assertEquals(null, nv002.birthDate)
         assertEquals(0, nv002.commendationCount)
 
-        // Request thứ 3 là POST lucky-draws với đúng 3 phần tử, đúng deviceCode
-        server.takeRequest(); server.takeRequest()
+        // Request thứ 2 là POST lucky-draws với đúng 3 phần tử, đúng deviceCode
+        server.takeRequest()
         val post = server.takeRequest()
         assertEquals("POST", post.method)
         assertEquals("/api/v1/attendance/lucky-draws", post.path)
@@ -120,7 +118,7 @@ class LuckyDrawSyncTest {
         server.enqueue(MockResponse().setResponseCode(404))
         val draws = FakeLuckyDrawSource(listOf(win(1, "NV001", "2026-08-20", "2026-08-20T01:00:00", 1, LuckyDrawReason.RANDOM)))
 
-        val outcome = EmployeeSyncEngine(FakeSource(), draws).sync(api, "key", "TABLET-1")
+        val outcome = EmployeeSyncEngine(FakeEmployeeSource(), draws).sync(api, "key", "TABLET-1")
 
         assertTrue(outcome is EmployeeSyncOutcome.Completed)
         assertEquals(0, (outcome as EmployeeSyncOutcome.Completed).luckyDrawsUploaded)
@@ -130,9 +128,9 @@ class LuckyDrawSyncTest {
     @Test
     fun `khong co dong Pending thi khong goi endpoint lucky-draws`() = runBlocking {
         enqueueMainSteps("""[]""")
-        val outcome = EmployeeSyncEngine(FakeSource(), FakeLuckyDrawSource(emptyList())).sync(api, "key", "TABLET-1")
+        val outcome = EmployeeSyncEngine(FakeEmployeeSource(), FakeLuckyDrawSource(emptyList())).sync(api, "key", "TABLET-1")
         assertTrue(outcome is EmployeeSyncOutcome.Completed)
-        assertEquals(2, server.requestCount)
+        assertEquals(1, server.requestCount)
     }
 
     private fun win(id: Long, code: String, date: String, wonAt: String, cans: Int, reason: String) =
@@ -152,12 +150,8 @@ private class FakeLuckyDrawSource(private val pending: List<LuckyDrawWinEntity>)
     }
 }
 
-private class FakeSource : EmployeeSyncSource {
+private class FakeEmployeeSource : EmployeeSyncSource {
     var erpEmployees: List<ErpEmployeeEntity> = emptyList()
-    override suspend fun getAllEnrolled(): List<EnrolledEmployeeEntity> = emptyList()
-    override suspend fun getEnrolledByCode(employeeCode: String): EnrolledEmployeeEntity? = null
-    override suspend fun markFaceUploaded(employeeCode: String, uploadedAt: String) = Unit
-    override suspend fun saveEmbeddingFromServer(employeeCode: String, fullName: String?, embedding: FloatArray, updatedAt: String) = Unit
     override suspend fun replaceErpEmployees(employees: List<ErpEmployeeEntity>) {
         erpEmployees = employees
     }

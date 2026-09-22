@@ -6,7 +6,6 @@ import com.dgpack.chamcong.data.db.AppDatabase
 import com.dgpack.chamcong.data.prefs.SettingsRepository
 import com.dgpack.chamcong.data.repository.AttendanceRepository
 import com.dgpack.chamcong.data.repository.EmployeeRepository
-import com.dgpack.chamcong.face.FaceEmbedder
 import com.dgpack.chamcong.luckydraw.LuckyDrawRepository
 import com.dgpack.chamcong.sync.EmployeeSyncCoordinator
 import com.dgpack.chamcong.sync.SyncManager
@@ -27,7 +26,7 @@ class ChamCongApplication : Application() {
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository.getInstance(this) }
     val employeeRepository: EmployeeRepository by lazy {
-        EmployeeRepository(database.enrolledEmployeeDao(), database.erpEmployeeDao(), database)
+        EmployeeRepository(database.erpEmployeeDao(), database)
     }
     val attendanceRepository: AttendanceRepository by lazy { AttendanceRepository(database.attendanceEventDao()) }
 
@@ -36,8 +35,7 @@ class ChamCongApplication : Application() {
         LuckyDrawRepository(
             winDao = database.luckyDrawWinDao(),
             attendanceDao = database.attendanceEventDao(),
-            erpDao = database.erpEmployeeDao(),
-            enrolledDao = database.enrolledEmployeeDao()
+            erpDao = database.erpEmployeeDao()
         )
     }
 
@@ -47,22 +45,17 @@ class ChamCongApplication : Application() {
             cardDao = database.cardAssignmentDao(),
             forgotDao = database.forgotCardLogDao(),
             summaryDao = database.employeeMonthSummaryDao(),
-            erpDao = database.erpEmployeeDao(),
-            enrolledDao = database.enrolledEmployeeDao()
+            erpDao = database.erpEmployeeDao()
         )
     }
 
     // Đồng bộ danh sách NV + embedding với ERP (API_FACE_SYNC.md) — trạng thái chia sẻ cho UI.
     val employeeSyncCoordinator: EmployeeSyncCoordinator by lazy { EmployeeSyncCoordinator(this) }
 
-    // Nặng (nạp model TFLite) — chỉ khởi tạo khi thực sự cần (lúc mở màn hình Camera/Enroll).
-    val faceEmbedder: FaceEmbedder by lazy { FaceEmbedder(this) }
-
     override fun onCreate() {
         super.onCreate()
         SyncManager.schedulePeriodic(this)
         applicationScope.launch {
-            employeeRepository.refreshCache()
             // Giữ nhật ký quên thẻ / cache công 2 tháng trên máy.
             runCatching { cardRepository.purgeOld() }
         }

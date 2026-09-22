@@ -11,17 +11,19 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.dgpack.chamcong.face.FaceQualityChecker
+
+/** Vị trí/kích thước khung tròn trong toạ độ CHUẨN HOÁ của khung hình phân tích. */
+private const val CIRCLE_CX = 0.5f
+private const val CIRCLE_CY = 0.45f
+/** Bán kính = tỉ lệ này × bề rộng khung hình. */
+private const val CIRCLE_R = 0.32f
 
 /**
- * Khung TRÒN hướng dẫn đặt mặt, dùng chung cho màn Chấm công và màn Đăng ký: lớp phủ tối
- * khoét tròn trong suốt + viền mờ + vòng màu theo trạng thái/tiến độ.
+ * Khung TRÒN hướng dẫn đặt mặt (bước chụp bằng chứng quên thẻ): lớp phủ tối khoét tròn + viền
+ * + vòng màu theo trạng thái. Vẽ theo phép co giãn FILL_CENTER của PreviewView để trùng với
+ * vị trí thật trong khung hình camera.
  *
- * Vòng tròn vẽ đúng vị trí của khung phân tích (toạ độ chuẩn hoá trong FaceQualityChecker)
- * sau khi quy đổi qua phép co giãn FILL_CENTER mà PreviewView đang dùng — nhờ vậy chỗ kiểm tra
- * "mặt trong khung" và chỗ người dùng nhìn thấy trùng nhau.
- *
- * @param sweepFraction 0..1 phần vòng màu được vẽ (1 = kín vòng; màn Đăng ký dùng % chất lượng)
+ * @param sweepFraction 0..1 phần vòng màu được vẽ (1 = kín vòng)
  * @param scrimAlpha    độ tối của lớp phủ ngoài vòng (0 = không phủ)
  */
 @Composable
@@ -37,9 +39,9 @@ fun FaceCircleOverlay(
         val scale = maxOf(size.width / frameWidth, size.height / frameHeight)
         val ox = (size.width - frameWidth * scale) / 2f
         val oy = (size.height - frameHeight * scale) / 2f
-        val cx = ox + FaceQualityChecker.OVAL_CX * frameWidth * scale
-        val cy = oy + FaceQualityChecker.OVAL_CY * frameHeight * scale
-        val r = FaceQualityChecker.OVAL_R * frameWidth * scale
+        val cx = ox + CIRCLE_CX * frameWidth * scale
+        val cy = oy + CIRCLE_CY * frameHeight * scale
+        val r = CIRCLE_R * frameWidth * scale
         val topLeft = Offset(cx - r, cy - r)
         val circleSize = Size(r * 2, r * 2)
 

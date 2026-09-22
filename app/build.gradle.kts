@@ -69,7 +69,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        // Model .tflite không được nén trong APK — bắt buộc để TFLite Interpreter
         // có thể memory-map trực tiếp file (mmap) khi load.
         jniLibs {
             useLegacyPackaging = false
@@ -77,7 +76,6 @@ android {
     }
 
     androidResources {
-        noCompress += "tflite"
     }
 }
 
@@ -112,8 +110,6 @@ dependencies {
     implementation("com.google.mlkit:face-detection:16.1.7")
 
     // TensorFlow Lite (MobileFaceNet embedding)
-    implementation("org.tensorflow:tensorflow-lite:2.16.1")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 
     // Room (SQLite local)
     val roomVersion = "2.6.1"

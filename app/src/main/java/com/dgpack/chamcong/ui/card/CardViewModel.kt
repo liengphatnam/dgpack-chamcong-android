@@ -249,7 +249,7 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
             var evidenceUsed = false
             try {
                 if (_uiState.value.phase != CardPhase.FORGOT_CAMERA || capturing) return@launch
-                _uiState.update { it.copy(frameWidth = result.frame.imageWidth, frameHeight = result.frame.imageHeight) }
+                _uiState.update { it.copy(frameWidth = result.imageWidth, frameHeight = result.imageHeight) }
                 val eye = result.eyeOpenProbability ?: return@launch
                 liveness.onEyeOpenSample(eye)
                 if (liveness.blinks != _uiState.value.blinks) {
@@ -262,7 +262,6 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
                     finishForgot(jpeg)
                 }
             } finally {
-                result.croppedBitmap.recycle()
                 result.evidenceBitmap?.recycle()
                 if (!evidenceUsed) Unit
             }

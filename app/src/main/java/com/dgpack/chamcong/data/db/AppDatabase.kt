@@ -9,7 +9,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
-        EnrolledEmployeeEntity::class,
         AttendanceEventEntity::class,
         ErpEmployeeEntity::class,
         LuckyDrawWinEntity::class,
@@ -17,11 +16,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ForgotCardLogEntity::class,
         EmployeeMonthSummaryEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun enrolledEmployeeDao(): EnrolledEmployeeDao
     abstract fun attendanceEventDao(): AttendanceEventDao
     abstract fun erpEmployeeDao(): ErpEmployeeDao
     abstract fun luckyDrawWinDao(): LuckyDrawWinDao
@@ -164,6 +162,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v5: bỏ nhận diện khuôn mặt — xoá bảng enrolled_employee (embedding). */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `enrolled_employee`")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -171,9 +176,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "chamcong.db"
                 )
-                    // KHÔNG dùng fallbackToDestructiveMigration — sẽ xoá sạch khuôn mặt đã enroll
-                    // và sự kiện chưa đồng bộ trên tablet đang chạy bản cũ.
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    // KHÔNG dùng fallbackToDestructiveMigration — sẽ xoá sạch sự kiện chưa đồng bộ,
+                    // thẻ đã gán và nhật ký quên thẻ trên tablet đang chạy bản cũ.
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build().also { instance = it }
             }
     }

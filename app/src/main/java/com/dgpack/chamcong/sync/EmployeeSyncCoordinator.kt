@@ -59,11 +59,6 @@ class EmployeeSyncCoordinator(private val app: ChamCongApplication) {
             }
         }
 
-        if (outcome is EmployeeSyncOutcome.Completed && outcome.downloaded > 0) {
-            // Có embedding mới tải về -> nạp lại cache RAM để camera nhận diện được ngay.
-            app.employeeRepository.refreshCache()
-        }
-
         val phase = if (outcome is EmployeeSyncOutcome.Completed) EmployeeSyncPhase.DONE else EmployeeSyncPhase.ERROR
         _state.value = EmployeeSyncState(phase, outcome, System.currentTimeMillis())
         outcome

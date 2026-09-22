@@ -17,9 +17,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dgpack.chamcong.R
 
+/** 1 dòng trong danh sách "vừa chấm công" ở góc màn hình. */
+data class RecentScan(val fullName: String, val timeLabel: String)
+
+/** Người vừa trúng thưởng lon nước ngọt — [seed] đổi mỗi lần để pháo hoa bắt đầu lại. */
+data class Celebration(val fullName: String, val cans: Int, val isBirthday: Boolean, val seed: Long)
+
 /**
  * Trúng thưởng lon nước ngọt (tháng 8–9/2026): pháo hoa toàn màn hình + bảng chúc mừng giữa
- * màn, hướng dẫn liên hệ nhân sự. Dùng chung cho màn Thẻ từ và màn Khuôn mặt.
+ * màn, hướng dẫn liên hệ nhân sự.
  */
 @Composable
 fun BoxScope.CelebrationOverlay(celebration: Celebration) {

@@ -36,6 +36,10 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
 
 ## Kiến trúc tóm tắt
 
+> **23/09/2026: đã bỏ nhận diện khuôn mặt** (MobileFaceNet/TFLite, enroll, ngưỡng tin cậy). Chấm công
+> bằng thẻ từ; ML Kit chỉ còn dùng để phát hiện mặt + chớp mắt khi chụp bằng chứng quên thẻ. Các
+> đoạn bên dưới nói về khuôn mặt là lịch sử.
+
 - `camera/FaceAnalyzer.kt` — ML Kit phát hiện khuôn mặt, throttle ~3fps.
 - `face/FaceEmbedder.kt` — TFLite MobileFaceNet sinh embedding.
 - `face/FaceMatcher.kt` — cosine similarity quy ra % độ tin cậy; **chỉ nhận diện khi

@@ -1,7 +1,6 @@
 package com.dgpack.chamcong.luckydraw
 
 import com.dgpack.chamcong.data.db.AttendanceEventDao
-import com.dgpack.chamcong.data.db.EnrolledEmployeeDao
 import com.dgpack.chamcong.data.db.ErpEmployeeDao
 import com.dgpack.chamcong.data.db.ErpEmployeeEntity
 import com.dgpack.chamcong.data.db.LuckyDrawReason
@@ -34,8 +33,7 @@ fun AppSettings.luckyDrawConfig(): LuckyDrawConfig {
 class LuckyDrawRepository(
     private val winDao: LuckyDrawWinDao,
     private val attendanceDao: AttendanceEventDao,
-    private val erpDao: ErpEmployeeDao,
-    private val enrolledDao: EnrolledEmployeeDao
+    private val erpDao: ErpEmployeeDao
 ) : LuckyDrawSyncSource {
 
     fun observeAll(): Flow<List<LuckyDrawWinEntity>> = winDao.observeAll()
@@ -70,11 +68,11 @@ class LuckyDrawRepository(
         fun candidateOf(code: String) = toCandidate(code, erpByCode[code], winsByCode[code] ?: 0)
 
         // Pool = người dự kiến còn chấm công hôm nay: ai đã chấm công trên máy này trong
-        // POOL_LOOKBACK_DAYS ngày qua (máy mới chưa có lịch sử thì lấy toàn bộ đã enroll),
+        // POOL_LOOKBACK_DAYS ngày qua (máy mới chưa có lịch sử thì lấy toàn bộ NV đang hoạt động bên ERP),
         // trừ những người đã chấm công hôm nay, cộng lại chính người đang quay.
         val lookbackStart = TimeUtils.vnDayStartUtc(today.minusDays(POOL_LOOKBACK_DAYS))
         val expected = attendanceDao.distinctEmployeesBetween(lookbackStart, dayEnd).toSet()
-            .ifEmpty { enrolledDao.getAllOnce().map { it.employeeCode }.toSet() }
+            .ifEmpty { erpByCode.values.filter { it.isActive }.map { it.employeeCode }.toSet() }
         val scannedToday = attendanceDao.distinctEmployeesBetween(dayStart, dayEnd).toSet()
         val pool = (expected - scannedToday + employeeCode).map(::candidateOf)
 

@@ -4,7 +4,6 @@ import com.dgpack.chamcong.data.db.CardAssignmentDao
 import com.dgpack.chamcong.data.db.CardAssignmentEntity
 import com.dgpack.chamcong.data.db.EmployeeMonthSummaryDao
 import com.dgpack.chamcong.data.db.EmployeeMonthSummaryEntity
-import com.dgpack.chamcong.data.db.EnrolledEmployeeDao
 import com.dgpack.chamcong.data.db.ErpEmployeeDao
 import com.dgpack.chamcong.data.db.ForgotCardLogDao
 import com.dgpack.chamcong.data.db.ForgotCardLogEntity
@@ -29,8 +28,7 @@ class CardRepository(
     private val cardDao: CardAssignmentDao,
     private val forgotDao: ForgotCardLogDao,
     private val summaryDao: EmployeeMonthSummaryDao,
-    private val erpDao: ErpEmployeeDao,
-    private val enrolledDao: EnrolledEmployeeDao
+    private val erpDao: ErpEmployeeDao
 ) : CardSyncSource {
 
     // ===== Thẻ -> nhân viên =====
@@ -44,14 +42,13 @@ class CardRepository(
         return null
     }
 
-    /** Tra NV theo mã (luồng quên thẻ): ERP cache trước, rồi danh sách đã đăng ký khuôn mặt. */
+    /** Tra NV theo mã (luồng quên thẻ): từ cache ERP. */
     suspend fun findEmployee(rawCode: String): CardHolder? {
         val code = rawCode.trim().uppercase()
         if (code.isEmpty()) return null
         erpDao.getByCode(code)?.let { return CardHolder(it.employeeCode, it.fullName) }
         // Mã ERP thường viết hoa; thử đúng chuỗi người dùng gõ nếu cache lưu khác kiểu.
         erpDao.getByCode(rawCode.trim())?.let { return CardHolder(it.employeeCode, it.fullName) }
-        enrolledDao.getByCode(code)?.let { return CardHolder(it.employeeCode, it.fullName) }
         return null
     }
 
@@ -63,8 +60,7 @@ class CardRepository(
     suspend fun findEmployeeByDigits(rawDigits: String): CardHolder? {
         val digits = rawDigits.filter { it.isDigit() }
         if (digits.isEmpty()) return null
-        val candidates = erpDao.getAllOnce().filter { it.isActive }.map { CardHolder(it.employeeCode, it.fullName) } +
-            enrolledDao.getAllOnce().map { CardHolder(it.employeeCode, it.fullName) }
+        val candidates = erpDao.getAllOnce().filter { it.isActive }.map { CardHolder(it.employeeCode, it.fullName) }
         val exact = candidates.filter { digitsOf(it.employeeCode) == digits }.sortedBy { it.employeeCode }
         if (exact.isNotEmpty()) return exact.first()
         val value = digits.toLongOrNull() ?: return null
@@ -74,9 +70,7 @@ class CardRepository(
     }
 
     suspend fun nameOf(employeeCode: String): String =
-        erpDao.getByCode(employeeCode)?.fullName
-            ?: enrolledDao.getByCode(employeeCode)?.fullName
-            ?: employeeCode
+        erpDao.getByCode(employeeCode)?.fullName ?: employeeCode
 
     /** Gán thẻ cho NV (1 NV 1 thẻ trên máy; thẻ đã thuộc người khác sẽ chuyển sang người này). */
     suspend fun assignCard(rawCardId: String, employeeCode: String, now: Instant = Instant.now()) {

@@ -1,4 +1,9 @@
-# API đồng bộ NHÂN VIÊN + EMBEDDING khuôn mặt (app Android ⇄ DGP.ERP)
+# API đồng bộ NHÂN VIÊN / THẺ TỪ / TRÚNG THƯỞNG (app Android ⇄ DGP.ERP)
+
+> **Từ 23/09/2026 app KHÔNG còn nhận diện khuôn mặt** — chấm công bằng thẻ từ, camera chỉ dùng chụp
+> bằng chứng khi quên thẻ. App không gọi mục 2 và 3 (face-embeddings) nữa; giữ lại làm tài liệu.
+> Các endpoint đang dùng: 1 (employees, cần thêm `cardId`), 4 (lucky-draws), 5–7 (cards, forgot-card,
+> month-summary).
 
 > Bổ sung cho mục [5] của `chamcongFaceID.md`. App Android đã code sẵn phía client theo
 > contract này (`network/FaceSyncDtos.kt`, `network/AttendanceApi.kt`, `sync/EmployeeSyncEngine.kt`).

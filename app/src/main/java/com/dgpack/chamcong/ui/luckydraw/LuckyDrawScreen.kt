@@ -3,6 +3,8 @@ package com.dgpack.chamcong.ui.luckydraw
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,8 +43,9 @@ import kotlin.math.roundToInt
  * Sổ người trúng thưởng lon nước ngọt (khu quản trị) — nhóm theo ngày, nhân sự bấm
  * "Đã phát" sau khi trao thưởng. Dòng nào đã đẩy lên ERP sẽ hiện "Đã đồng bộ".
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun LuckyDrawScreen(onBack: () -> Unit) {
+fun LuckyDrawScreen(canEdit: Boolean, onBack: () -> Unit) {
     val viewModel = appViewModel { LuckyDrawViewModel(it) }
     val state by viewModel.uiState.collectAsState()
 
@@ -65,6 +69,21 @@ fun LuckyDrawScreen(onBack: () -> Unit) {
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(12.dp)
                 )
+            }
+
+            // Bộ lọc: hôm nay / hôm qua / tuần này / tháng này / tất cả (ngày VN).
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                LuckyFilter.values().forEach { f ->
+                    FilterChip(
+                        selected = state.filter == f,
+                        onClick = { viewModel.setFilter(f) },
+                        label = { Text(filterLabel(f)) }
+                    )
+                }
             }
 
             if (state.days.isEmpty()) {
@@ -93,7 +112,7 @@ fun LuckyDrawScreen(onBack: () -> Unit) {
                         }
                     }
                     items(day.wins, key = { it.localId }) { win ->
-                        WinRow(win, onToggleClaimed = { viewModel.setClaimed(win, !win.claimed) })
+                        WinRow(win, canEdit = canEdit, onToggleClaimed = { viewModel.setClaimed(win, !win.claimed) })
                         HorizontalDivider()
                     }
                 }
@@ -103,7 +122,7 @@ fun LuckyDrawScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun WinRow(win: LuckyDrawWinEntity, onToggleClaimed: () -> Unit) {
+private fun WinRow(win: LuckyDrawWinEntity, canEdit: Boolean, onToggleClaimed: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -130,10 +149,15 @@ private fun WinRow(win: LuckyDrawWinEntity, onToggleClaimed: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        if (win.claimed) {
-            OutlinedButton(onClick = onToggleClaimed) { Text(stringResource(R.string.ld_da_phat)) }
-        } else {
-            Button(onClick = onToggleClaimed) { Text(stringResource(R.string.ld_chua_phat)) }
+        when {
+            // Cấp 1 chỉ xem: hiện trạng thái, không có nút đổi.
+            !canEdit -> Text(
+                text = if (win.claimed) stringResource(R.string.ld_da_phat) else stringResource(R.string.ld_chua_phat),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (win.claimed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+            win.claimed -> OutlinedButton(onClick = onToggleClaimed) { Text(stringResource(R.string.ld_da_phat)) }
+            else -> Button(onClick = onToggleClaimed) { Text(stringResource(R.string.ld_chua_phat)) }
         }
     }
 }
@@ -142,6 +166,15 @@ private fun WinRow(win: LuckyDrawWinEntity, onToggleClaimed: () -> Unit) {
 private fun reasonLabel(reason: String): String = when (reason) {
     LuckyDrawReason.BIRTHDAY -> stringResource(R.string.ld_ly_do_sinh_nhat)
     else -> stringResource(R.string.ld_ly_do_ngau_nhien)
+}
+
+@Composable
+private fun filterLabel(filter: LuckyFilter): String = when (filter) {
+    LuckyFilter.TODAY -> stringResource(R.string.ld_loc_hom_nay)
+    LuckyFilter.YESTERDAY -> stringResource(R.string.ld_loc_hom_qua)
+    LuckyFilter.THIS_WEEK -> stringResource(R.string.ld_loc_tuan_nay)
+    LuckyFilter.THIS_MONTH -> stringResource(R.string.ld_loc_thang_nay)
+    LuckyFilter.ALL -> stringResource(R.string.ld_loc_tat_ca)
 }
 
 /** "2026-09-16" -> "16/09/2026" cho người Việt đọc. */

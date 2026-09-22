@@ -2,130 +2,7 @@
 <resources>
     <string name="app_name">Chấm Công DGPack</string>
 
-    <!-- Màn hình chính -->
-    <string name="nhan_dien_dang_cho">Đưa mặt lại gần camera để chấm công</string>
-    <string name="chua_ket_noi_mang">Không có kết nối mạng</string>
-    <string name="cho_dong_bo_format">%1$d sự kiện đang chờ đồng bộ</string>
-    <string name="vua_cham_cong">Vừa chấm công</string>
-    <string name="goi_y_chop_mat_format">Xin chào %1$s! Vui lòng chớp mắt để xác nhận</string>
-    <string name="chua_nhan_dang_duoc_format">Hệ thống chưa nhận dạng được (%1$d%%)</string>
-    <string name="do_tin_cay_format">Độ tin cậy %1$d%%</string>
-    <string name="dung_gan_hon">Vui lòng đứng gần camera hơn</string>
-    <string name="giong_hai_nguoi_format">Chưa phân biệt được, giống 2 người (%1$d%%) — vui lòng nhìn thẳng</string>
-
-    <!-- Enroll -->
-    <string name="tieu_de_enroll">Đăng ký khuôn mặt nhân viên</string>
-    <string name="ma_nhan_vien">Mã nhân viên</string>
-    <string name="ma_nhan_vien_goi_y">Nhập đúng mã đã có trong ERP, ví dụ NV001</string>
-    <string name="ho_ten_hien_thi">Họ tên (chỉ hiển thị trên máy, không gửi lên server)</string>
-    <string name="chup_anh_format">Đã chụp %1$d/%2$d ảnh</string>
-    <string name="nut_chup_anh">Chụp ảnh</string>
-    <string name="nut_luu_enroll">Lưu đăng ký</string>
-    <string name="enroll_thanh_cong">Đã lưu khuôn mặt cho %1$s</string>
-    <string name="enroll_loi_thieu_ma">Vui lòng nhập mã nhân viên</string>
-    <string name="enroll_loi_khong_thay_mat">Không phát hiện khuôn mặt trong ảnh, vui lòng chụp lại</string>
-    <string name="enroll_loi_chua_du_anh">Cần đủ 5 ảnh đạt chất lượng trước khi lưu</string>
-    <string name="nut_chup_lai">Chụp lại</string>
-    <string name="enroll_du_anh">Đã đủ 5 ảnh đạt chất lượng — bấm Lưu đăng ký</string>
-    <string name="enroll_buoc_format">Bước %1$d/%2$d: %3$s</string>
-    <string name="pose_front">Nhìn thẳng vào camera</string>
-    <string name="pose_side_a">Quay đầu nhẹ sang một bên</string>
-    <string name="pose_side_b">Quay đầu nhẹ sang bên kia</string>
-    <string name="hint_no_face">Đưa khuôn mặt vào khung</string>
-    <string name="hint_multi">Chỉ một người trong khung</string>
-    <string name="hint_into_frame">Đưa mặt vào giữa khung</string>
-    <string name="hint_closer">Lại gần hơn</string>
-    <string name="hint_back">Lùi ra xa một chút</string>
-    <string name="hint_straight">Giữ đầu thẳng, không ngẩng hay nghiêng</string>
-    <string name="hint_other_way">Quay sang bên kia</string>
-    <string name="hint_turn_less">Quay ít hơn một chút</string>
-    <string name="hint_dark">Thiếu sáng — quay mặt về phía ánh sáng</string>
-    <string name="hint_bright">Quá sáng — tránh ngược sáng</string>
-    <string name="hint_blurry">Ảnh mờ — giữ yên</string>
-    <string name="hint_eyes">Mở mắt</string>
-    <string name="hint_good">Giữ yên…</string>
-    <string name="enroll_canh_bao_ghi_de">Mã nhân viên này đã đăng ký trước đó — lưu sẽ ghi đè dữ liệu cũ</string>
-
-    <!-- Settings -->
-    <string name="tieu_de_cai_dat">Cài đặt thiết bị</string>
-    <string name="url_server">Địa chỉ server ERP</string>
-    <string name="api_key">API Key</string>
-    <string name="ma_thiet_bi">Mã thiết bị (DeviceCode)</string>
-    <string name="nguong_do_tin_cay" formatted="false">Độ tin cậy nhận diện tối thiểu (%)</string>
-    <string name="nguong_do_tin_cay_goi_y">Mặc định 80. Thấp hơn ngưỡng này máy báo \"chưa nhận dạng được\" và không ghi công</string>
-    <string name="nguong_debounce_phut">Ngưỡng chống trùng (phút)</string>
-    <string name="nut_luu_cai_dat">Lưu cài đặt</string>
-    <string name="da_luu_cai_dat">Đã lưu cài đặt</string>
-    <string name="ma_pin_quan_tri">Mật mã cấp 1 (4 số, để trống = không khoá) — chỉ cho đồng bộ ERP và đăng ký khuôn mặt</string>
-    <string name="loi_pin_khong_hop_le">Mã PIN phải gồm đúng 4 chữ số, hoặc để trống để tắt khoá</string>
-
-    <!-- PIN -->
-    <string name="nhap_ma_pin">Nhập mật mã quản trị</string>
-    <string name="nhap_ma_pin_cap2">Nhập mật mã cấp 2</string>
-    <string name="nut_mat_ma_cap_2">Mật mã cấp 2…</string>
-    <string name="quyen_cap_format">quyền cấp %1$d</string>
-    <string name="ma_pin_sai">Sai mã PIN, vui lòng thử lại</string>
-
-    <!-- Queue -->
-    <string name="tieu_de_hang_doi">Hàng đợi đồng bộ</string>
-    <string name="nut_dong_bo_ngay">Đồng bộ ngay</string>
-    <string name="nut_thu_lai_unknown">Thử lại các mã chưa xác định</string>
-    <string name="dang_dong_bo">Đang đồng bộ…</string>
-    <string name="trang_thai_pending">Đang chờ</string>
-    <string name="trang_thai_synced">Đã đồng bộ</string>
-    <string name="trang_thai_duplicate">Trùng (đã có trên server)</string>
-    <string name="trang_thai_unknown_employee">Mã NV chưa có trong ERP</string>
-    <string name="trang_thai_failed">Lỗi</string>
-    <string name="canh_bao_unknown_employee">Có mã nhân viên chưa tồn tại trong ERP — vào trang \"Danh mục nhân viên\" của ERP để tạo trước, sau đó bấm \"Thử lại\"</string>
-    <string name="danh_sach_da_enroll">Danh sách đã đăng ký</string>
-    <string name="nut_nhan_vien_format">Nhân viên ERP (%1$d chưa có mặt)</string>
-
-    <!-- Nhân viên ERP / đồng bộ embedding (API_FACE_SYNC.md) -->
-    <string name="tieu_de_nhan_vien">Nhân viên ERP</string>
-    <string name="nut_dong_bo_nhan_vien">Đồng bộ nhân viên &amp; khuôn mặt</string>
-    <string name="loc_chua_co_khuon_mat_format">Chưa có khuôn mặt (%1$d)</string>
-    <string name="loc_tat_ca_format">Tất cả (%1$d)</string>
-    <string name="nv_bam_de_dang_ky">Chạm vào một nhân viên để đăng ký khuôn mặt</string>
-    <string name="nv_chua_dong_bo">Chưa kéo được danh sách nhân viên từ ERP — cần mạng và API key đúng, bấm \"Đồng bộ\"</string>
-    <string name="nv_danh_sach_rong">Không có nhân viên nào trong bộ lọc này</string>
-    <string name="nv_sync_running">Đang đồng bộ nhân viên và khuôn mặt với ERP…</string>
-    <string name="nv_sync_done_format">Đồng bộ xong: %1$d nhân viên, tải lên %2$d, tải về %3$d, còn %4$d chưa có khuôn mặt</string>
-    <string name="nv_sync_unknown_format">%1$d mã đã đăng ký trên máy không tồn tại trong ERP</string>
-    <string name="nv_sync_not_configured">Chưa nhập API key / mã thiết bị ở Cài đặt</string>
-    <string name="nv_sync_server_misconfigured">Server chưa cấu hình API key đồng bộ (503), thử lại sau</string>
-    <string name="nv_sync_endpoint_missing">Server ERP chưa có API đồng bộ nhân viên (404) — cần triển khai phía DGP.ERP (xem API_FACE_SYNC.md)</string>
-    <string name="nv_sync_unexpected_format">Lỗi server khi đồng bộ nhân viên (HTTP %1$d)</string>
-    <string name="face_status_missing">Chưa có khuôn mặt</string>
-    <string name="face_status_local_pending">Đã đăng ký, chờ tải lên</string>
-    <string name="face_status_local_synced">Đã đồng bộ</string>
-    <string name="face_status_server_only">Có trên server, sẽ tải về</string>
-    <string name="face_status_not_in_erp">Không có trong ERP</string>
-    <string name="loi_url_server">Địa chỉ server không hợp lệ (phải bắt đầu bằng https://)</string>
-
-    <!-- Trúng thưởng lon nước ngọt (tháng 8–9/2026) -->
-    <string name="tieu_de_trung_thuong">Sổ trúng thưởng</string>
-    <string name="ld_chuc_mung">🎉 CHÚC MỪNG 🎉</string>
-    <string name="ld_chuc_mung_sinh_nhat">🎂 CHÚC MỪNG SINH NHẬT 🎂</string>
-    <string name="ld_trung_format">Bạn trúng thưởng %1$d lon nước ngọt!</string>
-    <string name="ld_lien_he_nhan_su">Vui lòng liên hệ phòng Nhân sự để nhận thưởng</string>
-    <string name="ld_tong_format">%1$d lượt trúng · %2$d lon · %3$d chưa phát</string>
-    <string name="ld_ngay_format">Ngày %1$s — %2$d lon, %3$d chưa phát</string>
-    <string name="ld_lon_format">%1$d lon</string>
-    <string name="ld_xac_suat_format">tỷ lệ %1$d%%</string>
-    <string name="ld_ly_do_sinh_nhat">Sinh nhật</string>
-    <string name="ld_ly_do_ngau_nhien">Ngẫu nhiên</string>
-    <string name="ld_da_phat">Đã phát ✓</string>
-    <string name="ld_chua_phat">Chưa phát</string>
-    <string name="ld_rong">Chưa có ai trúng thưởng</string>
-    <string name="ld_tieu_de_cai_dat">Chương trình trúng thưởng lon nước ngọt</string>
-    <string name="ld_bat">Quay thưởng khi chấm công</string>
-    <string name="ld_ngay_bat_dau">Ngày bắt đầu (yyyy-MM-dd)</string>
-    <string name="ld_ngay_ket_thuc">Ngày kết thúc (yyyy-MM-dd)</string>
-    <string name="ld_loi_ngay">Ngày không hợp lệ — dùng dạng yyyy-MM-dd (ví dụ 2026-08-01) và ngày bắt đầu phải trước ngày kết thúc</string>
-    <string name="ld_quota">Số người trúng ngẫu nhiên tối đa mỗi ngày</string>
-    <string name="ld_quota_goi_y">Mặc định 8, tính riêng trên thiết bị này. Sinh nhật luôn trúng 3 lon, không tính vào số này</string>
-
-    <!-- Chấm công thẻ từ -->
+    <!-- Chấm công thẻ từ (màn chính) -->
     <string name="card_quet_the">Quét thẻ để chấm công</string>
     <string name="card_nut_quen_the">Quên mang thẻ</string>
     <string name="card_the_la">Thẻ chưa được gán cho ai — liên hệ nhân sự</string>
@@ -143,6 +20,11 @@
     <string name="card_ct_tien_tru">Tiền đã bị trừ</string>
     <string name="card_ct_bien_ban">Biên bản phạt</string>
     <string name="card_ct_khen_thuong">Khen thưởng</string>
+    <string name="cho_dong_bo_format">%1$d sự kiện đang chờ đồng bộ</string>
+    <string name="vua_cham_cong">Vừa chấm công</string>
+    <string name="nut_cai_dat_enroll_hang_doi">Quản trị</string>
+
+    <!-- Quên mang thẻ -->
     <string name="forgot_nhap_ma">Nhập phần số của mã nhân viên (ví dụ DN0001 → gõ 0001)</string>
     <string name="forgot_nut_tim">Tìm</string>
     <string name="forgot_khong_tim_thay">Không tìm thấy mã nhân viên này</string>
@@ -156,33 +38,101 @@
     <string name="forgot_tong_tru_format">Tổng tháng này đã bị trừ %1$s</string>
     <string name="forgot_khong_tru">Chưa bị trừ tiền</string>
     <string name="nut_huy">Huỷ</string>
+
+    <!-- Gán thẻ từ -->
     <string name="tieu_de_gan_the">Gán thẻ từ</string>
     <string name="nut_gan_the">Gán thẻ từ</string>
+    <string name="nut_gan_the_format">Gán thẻ từ (%1$d chưa có thẻ)</string>
     <string name="gan_the_quet">Quét thẻ vào máy đọc để gán cho người này</string>
     <string name="gan_the_hien_tai_format">Thẻ hiện tại: %1$s</string>
     <string name="gan_the_chua_co">Chưa có thẻ</string>
     <string name="gan_the_xong_format">Đã gán thẻ %1$s</string>
-    <string name="nv_tim_kiem">Tìm theo mã, tên hoặc số thẻ</string>
     <string name="nv_tim_theo_so">Gõ phần số của mã nhân viên…</string>
     <string name="nv_bam_de_gan_the">Chạm vào một nhân viên rồi quét thẻ để gán</string>
     <string name="nv_da_co_the_format">%1$d/%2$d đã có thẻ</string>
+    <string name="nut_dong_bo_nhan_vien">Đồng bộ nhân viên &amp; số thẻ từ</string>
+    <string name="nv_chua_dong_bo">Chưa kéo được danh sách nhân viên từ ERP — cần mạng và API key đúng, bấm \"Đồng bộ\"</string>
+    <string name="nv_danh_sach_rong">Không có nhân viên nào khớp</string>
+    <string name="nv_sync_running">Đang đồng bộ nhân viên và số thẻ từ với ERP…</string>
+    <string name="nv_sync_done_format">Đồng bộ xong: %1$d nhân viên, đẩy lên %2$d thẻ, %3$d lượt quên thẻ</string>
+    <string name="nv_sync_not_configured">Chưa nhập API key / mã thiết bị ở Cài đặt</string>
+    <string name="nv_sync_server_misconfigured">Server chưa cấu hình API key đồng bộ (503), thử lại sau</string>
+    <string name="nv_sync_endpoint_missing">Server ERP chưa có API đồng bộ nhân viên (404) — cần triển khai phía DGP.ERP (xem API_FACE_SYNC.md)</string>
+    <string name="nv_sync_unexpected_format">Lỗi server khi đồng bộ nhân viên (HTTP %1$d)</string>
+
+    <!-- Nhật ký quên thẻ -->
     <string name="tieu_de_nhat_ky_quen_the">Nhật ký quên thẻ</string>
     <string name="nut_nhat_ky_quen_the">Nhật ký quên thẻ</string>
     <string name="nk_thang_format">Tháng %1$s</string>
     <string name="nk_tong_format">%1$d lượt · %2$d chưa đồng bộ</string>
     <string name="nk_rong">Không có lượt quên thẻ trong tháng này</string>
-    <string name="cd_tieu_de">Chế độ chấm công ở màn hình chính</string>
-    <string name="cd_the_tu">Thẻ từ (quên thẻ thì nhập mã + chớp mắt chụp hình)</string>
-    <string name="cd_khuon_mat">Nhận diện khuôn mặt</string>
+
+    <!-- Settings -->
+    <string name="tieu_de_cai_dat">Cài đặt thiết bị</string>
+    <string name="url_server">Địa chỉ server ERP</string>
+    <string name="api_key">API Key</string>
+    <string name="ma_thiet_bi">Mã thiết bị (DeviceCode)</string>
+    <string name="nguong_debounce_phut">Ngưỡng chống trùng (phút)</string>
+    <string name="nut_luu_cai_dat">Lưu cài đặt</string>
+    <string name="da_luu_cai_dat">Đã lưu cài đặt</string>
+    <string name="ma_pin_quan_tri">Mật mã cấp 1 (4 số, để trống = không khoá) — chỉ cho đồng bộ ERP và gán thẻ từ</string>
+    <string name="loi_pin_khong_hop_le">Mật mã phải gồm đúng 4 chữ số, hoặc để trống để tắt khoá</string>
     <string name="phat_tieu_de">Luật phạt quên thẻ (trừ tiền thưởng nội quy, tính theo tháng)</string>
     <string name="phat_lan_dau">Bắt đầu trừ từ lần quên thứ (0 = không phạt)</string>
     <string name="phat_moi">Sau đó cứ thêm bao nhiêu lần lại trừ tiếp</string>
     <string name="phat_tien">Số tiền trừ mỗi mốc (đồng)</string>
     <string name="phat_goi_y">Mặc định: từ lần 2 trừ 50.000, cứ 2 lần trừ thêm 50.000; tháng sau tính lại từ đầu</string>
+    <string name="loi_url_server">Địa chỉ server không hợp lệ (phải bắt đầu bằng https://)</string>
+
+    <!-- Mật mã -->
+    <string name="nhap_ma_pin">Nhập mật mã quản trị</string>
+    <string name="nhap_ma_pin_cap2">Nhập mật mã cấp 2</string>
+    <string name="nut_mat_ma_cap_2">Mật mã cấp 2…</string>
+    <string name="quyen_cap_format">quyền cấp %1$d</string>
+    <string name="ma_pin_sai">Sai mật mã, vui lòng thử lại</string>
+
+    <!-- Hàng đợi đồng bộ -->
+    <string name="tieu_de_hang_doi">Hàng đợi đồng bộ</string>
+    <string name="nut_dong_bo_ngay">Đồng bộ ngay</string>
+    <string name="nut_thu_lai_unknown">Thử lại các mã chưa xác định</string>
+    <string name="trang_thai_pending">Đang chờ</string>
+    <string name="trang_thai_synced">Đã đồng bộ</string>
+    <string name="trang_thai_duplicate">Trùng (đã có trên server)</string>
+    <string name="trang_thai_unknown_employee">Mã NV chưa có trong ERP</string>
+    <string name="trang_thai_failed">Lỗi</string>
+    <string name="canh_bao_unknown_employee">Có mã nhân viên chưa tồn tại trong ERP — vào trang \"Danh mục nhân viên\" của ERP để tạo trước, sau đó bấm \"Thử lại\"</string>
+
+    <!-- Trúng thưởng lon nước ngọt (tháng 8–9/2026) -->
+    <string name="tieu_de_trung_thuong">Sổ trúng thưởng</string>
+    <string name="ld_chuc_mung">🎉 CHÚC MỪNG 🎉</string>
+    <string name="ld_chuc_mung_sinh_nhat">🎂 CHÚC MỪNG SINH NHẬT 🎂</string>
+    <string name="ld_trung_format">Bạn trúng thưởng %1$d lon nước ngọt!</string>
+    <string name="ld_lien_he_nhan_su">Vui lòng liên hệ phòng Nhân sự để nhận thưởng</string>
+    <string name="ld_tong_format">%1$d lượt trúng · %2$d lon · %3$d chưa phát</string>
+    <string name="ld_ngay_format">Ngày %1$s — %2$d lon, %3$d chưa phát</string>
+    <string name="ld_lon_format">%1$d lon</string>
+    <string name="ld_xac_suat_format">tỷ lệ %1$d%%</string>
+    <string name="ld_ly_do_sinh_nhat">Sinh nhật</string>
+    <string name="ld_ly_do_ngau_nhien">Ngẫu nhiên</string>
+    <string name="ld_da_phat">Đã phát ✓</string>
+    <string name="ld_chua_phat">Chưa phát</string>
+    <string name="ld_rong">Chưa có ai trúng thưởng</string>
+    <string name="ld_loc_hom_nay">Hôm nay</string>
+    <string name="ld_loc_hom_qua">Hôm qua</string>
+    <string name="ld_loc_tuan_nay">Tuần này</string>
+    <string name="ld_loc_thang_nay">Tháng này</string>
+    <string name="ld_loc_tat_ca">Tất cả</string>
+    <string name="ld_tieu_de_cai_dat">Chương trình trúng thưởng lon nước ngọt</string>
+    <string name="ld_bat">Quay thưởng khi chấm công</string>
+    <string name="ld_ngay_bat_dau">Ngày bắt đầu (yyyy-MM-dd)</string>
+    <string name="ld_ngay_ket_thuc">Ngày kết thúc (yyyy-MM-dd)</string>
+    <string name="ld_loi_ngay">Ngày không hợp lệ — dùng dạng yyyy-MM-dd (ví dụ 2026-08-01) và ngày bắt đầu phải trước ngày kết thúc</string>
+    <string name="ld_quota">Số người trúng ngẫu nhiên tối đa mỗi ngày</string>
+    <string name="ld_quota_goi_y">Mặc định 8, tính riêng trên thiết bị này. Sinh nhật luôn trúng 3 lon, không tính vào số này</string>
 
     <!-- Chung -->
     <string name="loi_api_key_sai">API key không đúng, vào Cài đặt kiểm tra lại</string>
     <string name="loi_mang">Lỗi kết nối mạng, sẽ tự thử lại</string>
+    <string name="chua_ket_noi_mang">Không có kết nối mạng</string>
     <string name="quay_lai">Quay lại</string>
-    <string name="nut_cai_dat_enroll_hang_doi">Quản trị</string>
 </resources>

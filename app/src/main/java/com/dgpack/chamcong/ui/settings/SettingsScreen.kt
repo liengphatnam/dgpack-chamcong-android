@@ -1,12 +1,13 @@
 package com.dgpack.chamcong.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,7 +15,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,6 +32,10 @@ import com.dgpack.chamcong.R
 import com.dgpack.chamcong.sync.LastSyncKind
 import com.dgpack.chamcong.ui.appViewModel
 
+/**
+ * Cài đặt thiết bị (mật mã cấp 2). Đây là màn DUY NHẤT dùng bàn phím hệ thống / dán —
+ * để nhập API key, URL. Mọi chỗ khác dùng bàn phím số trong app.
+ */
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val viewModel = appViewModel { SettingsViewModel(it) }
@@ -83,17 +87,10 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = state.minConfidencePercent,
-                onValueChange = viewModel::onMinConfidenceChange,
-                label = { Text(stringResource(R.string.nguong_do_tin_cay)) },
-                supportingText = { Text(stringResource(R.string.nguong_do_tin_cay_goi_y)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
                 value = state.debounceMinutes,
                 onValueChange = viewModel::onDebounceChange,
                 label = { Text(stringResource(R.string.nguong_debounce_phut)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
@@ -108,19 +105,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ---- Chế độ chấm công + luật phạt quên thẻ ----
-            Text(stringResource(R.string.cd_tieu_de), style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    if (state.cardMode) stringResource(R.string.cd_the_tu) else stringResource(R.string.cd_khuon_mat),
-                    modifier = Modifier.weight(1f)
-                )
-                Switch(checked = state.cardMode, onCheckedChange = viewModel::onCardModeChange)
-            }
+            // ---- Luật phạt quên thẻ ----
             Text(stringResource(R.string.phat_tieu_de), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = state.forgotFirstAt,

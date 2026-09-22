@@ -3,9 +3,9 @@ package com.dgpack.chamcong.network
 import kotlinx.serialization.Serializable
 
 /*
- * Contract đồng bộ NHÂN VIÊN + EMBEDDING khuôn mặt với ERP — xem API_FACE_SYNC.md ở repo
- * này. Đây là 3 endpoint MỚI phía ERP (chưa có trong chamcongFaceID.md mục [5]), dùng
- * chung header X-Attendance-Api-Key và cách xử lý 401/503 như sync-events.
+ * Contract đồng bộ NHÂN VIÊN / THẺ TỪ / TRÚNG THƯỞNG với ERP — xem API_FACE_SYNC.md. Dùng chung
+ * header X-Attendance-Api-Key và cách xử lý 401/503 như sync-events. (Tên file giữ nguyên vì
+ * lịch sử; app không còn đồng bộ embedding khuôn mặt.)
  */
 
 /** GET api/v1/attendance/employees — 1 phần tử = 1 dòng dm.Employee. */
@@ -14,13 +14,10 @@ data class ErpEmployeeDto(
     val employeeCode: String,
     val fullName: String,
     val isActive: Boolean = true,
-    /** Server đã có embedding cho NV này (bảng hr.EmployeeFaceEmbedding) hay chưa. */
+    /** Còn giữ để tương thích server cũ; app không dùng nữa. */
     val hasFaceEmbedding: Boolean = false,
-    /** ISO-8601 UTC, null nếu chưa có embedding. */
     val faceUpdatedAt: String? = null,
-    // ---- Trường thêm cho chương trình trúng thưởng lon nước ngọt (API_FACE_SYNC.md mục 4).
-    // Server cũ không trả -> giữ mặc định, app vẫn quay thưởng nhưng mọi người trọng số bằng nhau
-    // và không ai được ưu tiên sinh nhật. ----
+    // ---- Chương trình trúng thưởng lon nước ngọt (API_FACE_SYNC.md mục 4) — đều tuỳ chọn ----
     /** Ngày sinh "yyyy-MM-dd" (chấp nhận cả "yyyy-MM-ddT00:00:00" kiểu .NET DateTime). */
     val birthDate: String? = null,
     /** Số lần đi trễ/về sớm trong 30 ngày gần nhất (ERP tính từ hr.AttendanceEvent so với ca). */
@@ -31,7 +28,7 @@ data class ErpEmployeeDto(
     val cardId: String? = null
 )
 
-// ===== Chấm công bằng thẻ từ (API_FACE_SYNC.md mục 5–7) =====
+// ===== Thẻ từ (API_FACE_SYNC.md mục 5–7) =====
 
 /** POST api/v1/attendance/cards — thẻ gán trên thiết bị, upsert theo cardId. */
 @Serializable
@@ -92,6 +89,8 @@ data class MonthSummaryDto(
     val penaltyAmount: Long = 0
 )
 
+// ===== Trúng thưởng lon nước ngọt (API_FACE_SYNC.md mục 4) =====
+
 /** POST api/v1/attendance/lucky-draws — 1 phần tử = 1 lần trúng thưởng trên thiết bị. */
 @Serializable
 data class LuckyDrawUploadRequest(
@@ -120,50 +119,4 @@ data class LuckyDrawUploadResult(
         const val STATUS_DUPLICATE = "Duplicate"
         const val STATUS_UNKNOWN_EMPLOYEE = "UnknownEmployee"
     }
-}
-
-/** POST api/v1/attendance/face-embeddings — body là mảng, mỗi phần tử 1 NV. */
-@Serializable
-data class FaceEmbeddingUploadRequest(
-    val employeeCode: String,
-    /** Định danh model để server/app khác không so khớp nhầm embedding khác model. */
-    val model: String,
-    val dimension: Int,
-    val embedding: List<Float>,
-    /** ISO-8601 UTC lúc enroll trên thiết bị — server lưu làm updatedAt. */
-    val enrolledAt: String,
-    val deviceCode: String?
-)
-
-/** Response của POST face-embeddings, cùng thứ tự với request. */
-@Serializable
-data class FaceEmbeddingUploadResult(
-    val employeeCode: String,
-    val status: String
-) {
-    companion object {
-        const val STATUS_SAVED = "Saved"
-        const val STATUS_UNKNOWN_EMPLOYEE = "UnknownEmployee"
-    }
-}
-
-/** GET api/v1/attendance/face-embeddings — toàn bộ embedding đang có trên server. */
-@Serializable
-data class FaceEmbeddingDownloadDto(
-    val employeeCode: String,
-    val model: String,
-    val dimension: Int,
-    val embedding: List<Float>,
-    /** ISO-8601 UTC — chính là enrolledAt mà thiết bị đã gửi lên. */
-    val updatedAt: String,
-    val deviceCode: String? = null
-)
-
-object FaceModelInfo {
-    /**
-     * Tên model hiện app dùng (MobileFaceNet, 192 chiều) — đổi model HOẶC đổi cách tiền xử lý
-     * (crop/căn chỉnh) thì đổi tên này, vì embedding sinh ra không so sánh chéo được.
-     * "align2": mặt được căn theo 2 mắt về mẫu ArcFace (ImageUtils.alignFace) thay vì crop thô.
-     */
-    const val MODEL_NAME = "mobilefacenet-192-align2"
 }
