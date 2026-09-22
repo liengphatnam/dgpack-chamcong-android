@@ -2,6 +2,8 @@ package com.dgpack.chamcong.camera
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.PointF
+import android.graphics.Rect
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.dgpack.chamcong.face.ImageUtils
@@ -39,6 +41,11 @@ class FaceAnalyzer(
     private val minIntervalMs = 1000L / targetFps
     private var lastProcessedAt = 0L
 
+    private companion object {
+        /** Vùng chuyển sang bitmap = bounding box mở rộng thêm 60% mỗi phía. */
+        const val REGION_PAD_RATIO = 0.6f
+    }
+
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
@@ -75,15 +82,32 @@ class FaceAnalyzer(
                 val largest = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
                 if (largest != null) {
                     try {
-                        val bitmap = ImageUtils.imageProxyToBitmap(imageProxy)
+                        // Chỉ chuyển vùng quanh mặt (mở rộng 60% mỗi phía để đủ chỗ cho phép căn
+                        // chỉnh xoay/co giãn), KHÔNG chuyển cả khung hình -> nhẹ máy, hết giật.
+                        val box = largest.boundingBox
+                        val padX = (box.width() * REGION_PAD_RATIO).toInt()
+                        val padY = (box.height() * REGION_PAD_RATIO).toInt()
+                        val wanted = Rect(box.left - padX, box.top - padY, box.right + padX, box.bottom + padY)
+                        val face = ImageUtils.faceRegionToBitmap(imageProxy, wanted)
+                        val region = face.region
+
                         val leftEye = largest.getLandmark(FaceLandmark.LEFT_EYE)?.position
                         val rightEye = largest.getLandmark(FaceLandmark.RIGHT_EYE)?.position
                         val aligned = leftEye != null && rightEye != null
                         val cropped = if (aligned) {
-                            ImageUtils.alignFace(bitmap, leftEye!!, rightEye!!)
+                            ImageUtils.alignFace(
+                                face.bitmap,
+                                PointF(leftEye!!.x - region.left, leftEye.y - region.top),
+                                PointF(rightEye!!.x - region.left, rightEye.y - region.top)
+                            )
                         } else {
-                            ImageUtils.cropAndResizeFace(bitmap, largest.boundingBox)
+                            val boxInRegion = Rect(
+                                box.left - region.left, box.top - region.top,
+                                box.right - region.left, box.bottom - region.top
+                            )
+                            ImageUtils.cropAndResizeFace(face.bitmap, boxInRegion)
                         }
+                        face.bitmap.recycle()
                         val leftProb = largest.leftEyeOpenProbability
                         val rightProb = largest.rightEyeOpenProbability
                         val eyeOpenProbability = when {

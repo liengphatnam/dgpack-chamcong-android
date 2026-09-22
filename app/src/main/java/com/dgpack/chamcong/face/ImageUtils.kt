@@ -1,99 +1,111 @@
 package com.dgpack.chamcong.face
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.Rect
-import android.graphics.YuvImage
 import androidx.camera.core.ImageProxy
-import java.io.ByteArrayOutputStream
 import kotlin.math.atan2
 import kotlin.math.hypot
 
 object ImageUtils {
 
     /**
-     * Chuyển ImageProxy (định dạng YUV_420_888 từ CameraX ImageAnalysis) sang Bitmap
-     * đã xoay đúng chiều theo rotationDegrees. Cách làm thủ công qua NV21 + YuvImage
-     * để tương thích ổn định với mọi thiết bị (không phụ thuộc API mới/chưa chắc có).
+     * Kết quả [faceRegionToBitmap]: [bitmap] là vùng [region] (toạ độ trong ảnh ĐÃ XOAY đúng
+     * chiều, cùng hệ với bounding box / landmark ML Kit trả về), đã xoay đúng chiều.
      */
-    fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
-        val nv21 = yuv420888ToNv21(imageProxy)
-        val yuvImage = YuvImage(nv21, android.graphics.ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
-        val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 95, out)
-        val jpegBytes = out.toByteArray()
-        val bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
-        val rotation = imageProxy.imageInfo.rotationDegrees
-        return if (rotation != 0) rotateBitmap(bitmap, rotation) else bitmap
-    }
-
-    private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
-        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-    }
+    class FaceRegion(val bitmap: Bitmap, val region: Rect)
 
     /**
-     * YUV_420_888 -> NV21 (Y liền, rồi V/U xen kẽ) đúng kích thước width*height*3/2.
+     * Chuyển CHỈ vùng khuôn mặt của khung hình YUV_420_888 sang Bitmap ARGB, không qua JPEG.
      *
-     * Bản cũ copy nguyên buffer Y (`buffer.remaining()`) và coi rowStride == width. Trên nhiều
-     * tablet giá rẻ (MediaTek/Unisoc, vd MFISO B1 PRO) rowStride > width (mỗi hàng có byte
-     * đệm) nên ảnh bị "xé" chéo, và phần chroma bị lệch offset -> màu sai. ML Kit đọc thẳng
-     * từ Image nên bounding box vẫn đúng, còn bitmap ta crop lại méo -> embedding của mọi
-     * người na ná nhau -> NHẬN NHẦM NGƯỜI. Vì vậy phải copy từng hàng theo rowStride.
-     * Cũng rewind() buffer trước khi đọc vì ML Kit có thể đã dịch position.
+     * Bản cũ nén CẢ khung 1280x720 thành JPEG rồi giải nén, rồi xoay cả ảnh (cấp phát ~3.6 MB
+     * mỗi lần) chỉ để lấy vùng mặt vài trăm px -> trên tablet yếu mỗi frame mất hàng trăm ms,
+     * camera giật. Giờ chỉ đọc đúng số pixel của vùng mặt (ít hơn 10–30 lần), chuyển YUV->RGB
+     * trực tiếp, xoay bitmap nhỏ. Đọc plane theo rowStride/pixelStride nên máy có byte đệm
+     * mỗi hàng (MediaTek/Unisoc) vẫn đúng.
+     *
+     * @param regionRotated vùng cần lấy trong hệ toạ độ ảnh đã xoay (vd bounding box mở rộng).
      */
-    private fun yuv420888ToNv21(image: ImageProxy): ByteArray {
-        val width = image.width
-        val height = image.height
-        val nv21 = ByteArray(width * height * 3 / 2)
+    fun faceRegionToBitmap(imageProxy: ImageProxy, regionRotated: Rect): FaceRegion {
+        val rotation = imageProxy.imageInfo.rotationDegrees
+        val w = imageProxy.width
+        val h = imageProxy.height
+        val uprightW = if (rotation == 90 || rotation == 270) h else w
+        val uprightH = if (rotation == 90 || rotation == 270) w else h
 
-        val yPlane = image.planes[0]
-        val yBuffer = yPlane.buffer.duplicate().also { it.rewind() }
-        val yRowStride = yPlane.rowStride
-        val yPixelStride = yPlane.pixelStride
-        var pos = 0
-        if (yPixelStride == 1) {
-            for (row in 0 until height) {
-                yBuffer.position(row * yRowStride)
-                yBuffer.get(nv21, pos, width)
-                pos += width
-            }
-        } else {
-            for (row in 0 until height) {
-                val rowStart = row * yRowStride
-                for (col in 0 until width) {
-                    nv21[pos++] = yBuffer.get(rowStart + col * yPixelStride)
-                }
-            }
+        // Clamp trong ảnh đã xoay, ép toạ độ/kích thước chẵn để khớp lưới chroma 2x2.
+        val left = (regionRotated.left.coerceIn(0, uprightW - 2)) and 1.inv()
+        val top = (regionRotated.top.coerceIn(0, uprightH - 2)) and 1.inv()
+        val right = (regionRotated.right.coerceIn(left + 2, uprightW)) and 1.inv()
+        val bottom = (regionRotated.bottom.coerceIn(top + 2, uprightH)) and 1.inv()
+        val region = Rect(left, top, right, bottom)
+
+        // Ánh xạ ngược vùng đã xoay về toạ độ gốc của cảm biến.
+        val orig = when (rotation) {
+            90 -> Rect(top, h - right, bottom, h - left)
+            180 -> Rect(w - right, h - bottom, w - left, h - top)
+            270 -> Rect(w - bottom, left, w - top, right)
+            else -> Rect(left, top, right, bottom)
         }
 
+        val pixels = yuvRegionToArgb(imageProxy, orig)
+        var bitmap = Bitmap.createBitmap(pixels, orig.width(), orig.height(), Bitmap.Config.ARGB_8888)
+        if (rotation != 0) {
+            val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
+            val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            bitmap.recycle()
+            bitmap = rotated
+        }
+        return FaceRegion(bitmap, region)
+    }
+
+    /** YUV_420_888 -> ARGB cho vùng [rect] (toạ độ gốc cảm biến, đã chẵn). BT.601 full-range. */
+    private fun yuvRegionToArgb(image: ImageProxy, rect: Rect): IntArray {
+        val yPlane = image.planes[0]
         val uPlane = image.planes[1]
         val vPlane = image.planes[2]
-        val uBuffer = uPlane.buffer.duplicate().also { it.rewind() }
-        val vBuffer = vPlane.buffer.duplicate().also { it.rewind() }
-        val uRowStride = uPlane.rowStride
-        val uPixelStride = uPlane.pixelStride
-        val vRowStride = vPlane.rowStride
-        val vPixelStride = vPlane.pixelStride
-        val chromaHeight = height / 2
-        val chromaWidth = width / 2
-        val uLimit = uBuffer.limit()
-        val vLimit = vBuffer.limit()
-        for (row in 0 until chromaHeight) {
-            val vRow = row * vRowStride
-            val uRow = row * uRowStride
-            for (col in 0 until chromaWidth) {
-                val vIndex = vRow + col * vPixelStride
-                val uIndex = uRow + col * uPixelStride
-                nv21[pos++] = if (vIndex < vLimit) vBuffer.get(vIndex) else 0
-                nv21[pos++] = if (uIndex < uLimit) uBuffer.get(uIndex) else 0
+        // duplicate() + rewind(): ML Kit có thể đã dịch position của buffer gốc.
+        val yBuf = yPlane.buffer.duplicate().also { it.rewind() }
+        val uBuf = uPlane.buffer.duplicate().also { it.rewind() }
+        val vBuf = vPlane.buffer.duplicate().also { it.rewind() }
+        val yRow = yPlane.rowStride
+        val yPix = yPlane.pixelStride
+        val uRow = uPlane.rowStride
+        val uPix = uPlane.pixelStride
+        val vRow = vPlane.rowStride
+        val vPix = vPlane.pixelStride
+        val uLimit = uBuf.limit()
+        val vLimit = vBuf.limit()
+        val yLimit = yBuf.limit()
+
+        val width = rect.width()
+        val height = rect.height()
+        val out = IntArray(width * height)
+        var i = 0
+        for (row in 0 until height) {
+            val sy = rect.top + row
+            val yBase = sy * yRow
+            val cBaseU = (sy / 2) * uRow
+            val cBaseV = (sy / 2) * vRow
+            for (col in 0 until width) {
+                val sx = rect.left + col
+                val yi = yBase + sx * yPix
+                val ui = cBaseU + (sx / 2) * uPix
+                val vi = cBaseV + (sx / 2) * vPix
+                val y = if (yi < yLimit) yBuf.get(yi).toInt() and 0xFF else 0
+                val u = (if (ui < uLimit) uBuf.get(ui).toInt() and 0xFF else 128) - 128
+                val v = (if (vi < vLimit) vBuf.get(vi).toInt() and 0xFF else 128) - 128
+                // Hệ số nhân 1024 để tính bằng số nguyên.
+                val r = (y + ((1436 * v) shr 10)).coerceIn(0, 255)
+                val g = (y - ((352 * u + 731 * v) shr 10)).coerceIn(0, 255)
+                val b = (y + ((1815 * u) shr 10)).coerceIn(0, 255)
+                out[i++] = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
             }
         }
-        return nv21
+        return out
     }
 
     /**
@@ -127,10 +139,9 @@ object ImageUtils {
      * về đúng vị trí mẫu ArcFace trong khung 112x112. Kết quả: mặt nghiêng đầu, đứng lệch,
      * xa/gần đều được đưa về cùng một khung so sánh.
      *
-     * [eyeA]/[eyeB] là toạ độ 2 mắt trong hệ toạ độ của [source] (ảnh đã xoay đúng chiều,
-     * cùng hệ với bounding box ML Kit). Không cần biết mắt nào là trái/phải của người —
-     * hàm tự lấy mắt có x nhỏ hơn làm "mắt bên trái ảnh" nên camera trước có gương hay không
-     * đều đúng.
+     * [eyeA]/[eyeB] là toạ độ 2 mắt trong hệ toạ độ của [source]. Không cần biết mắt nào là
+     * trái/phải của người — hàm tự lấy mắt có x nhỏ hơn làm "mắt bên trái ảnh" nên camera
+     * trước có gương hay không đều đúng.
      */
     fun alignFace(source: Bitmap, eyeA: PointF, eyeB: PointF): Bitmap {
         val (leftEye, rightEye) = if (eyeA.x <= eyeB.x) eyeA to eyeB else eyeB to eyeA
