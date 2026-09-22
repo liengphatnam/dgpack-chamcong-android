@@ -11,11 +11,17 @@ package com.dgpack.chamcong.face
  */
 class LivenessTracker(
     private val eyeClosedThreshold: Float = 0.3f,
-    private val eyeOpenThreshold: Float = 0.6f
+    private val eyeOpenThreshold: Float = 0.6f,
+    /** Số nhịp chớp mắt cần có (chấm công: 1; quên thẻ chụp bằng chứng: 2 lần liên tiếp). */
+    private val requiredBlinks: Int = 1
 ) {
     private enum class State { WAIT_OPEN, WAIT_CLOSED, WAIT_OPEN_AGAIN, CONFIRMED }
 
     private var state = State.WAIT_OPEN
+
+    /** Số nhịp chớp mắt đã đếm được (mở -> nhắm -> mở). */
+    var blinks: Int = 0
+        private set
 
     val isConfirmed: Boolean get() = state == State.CONFIRMED
 
@@ -24,7 +30,10 @@ class LivenessTracker(
         when (state) {
             State.WAIT_OPEN -> if (probability >= eyeOpenThreshold) state = State.WAIT_CLOSED
             State.WAIT_CLOSED -> if (probability <= eyeClosedThreshold) state = State.WAIT_OPEN_AGAIN
-            State.WAIT_OPEN_AGAIN -> if (probability >= eyeOpenThreshold) state = State.CONFIRMED
+            State.WAIT_OPEN_AGAIN -> if (probability >= eyeOpenThreshold) {
+                blinks++
+                state = if (blinks >= requiredBlinks) State.CONFIRMED else State.WAIT_CLOSED
+            }
             State.CONFIRMED -> Unit
         }
     }

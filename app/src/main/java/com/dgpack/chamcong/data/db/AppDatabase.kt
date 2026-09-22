@@ -12,9 +12,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         EnrolledEmployeeEntity::class,
         AttendanceEventEntity::class,
         ErpEmployeeEntity::class,
-        LuckyDrawWinEntity::class
+        LuckyDrawWinEntity::class,
+        CardAssignmentEntity::class,
+        ForgotCardLogEntity::class,
+        EmployeeMonthSummaryEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +25,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun attendanceEventDao(): AttendanceEventDao
     abstract fun erpEmployeeDao(): ErpEmployeeDao
     abstract fun luckyDrawWinDao(): LuckyDrawWinDao
+    abstract fun cardAssignmentDao(): CardAssignmentDao
+    abstract fun forgotCardLogDao(): ForgotCardLogDao
+    abstract fun employeeMonthSummaryDao(): EmployeeMonthSummaryDao
 
     companion object {
         @Volatile
@@ -91,6 +97,73 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v4: chấm công bằng THẺ TỪ —
+         *  - erp_employee thêm cardId (DROP + CREATE vì chỉ là cache),
+         *  - attendance_event_local thêm method ('Face'|'Card'|'ForgotCard') + cardId (dòng cũ = Face),
+         *  - bảng card_assignment (thẻ gán trên máy), forgot_card_log (quên thẻ + ảnh bằng chứng),
+         *    employee_month_summary (cache chi tiết công tháng từ ERP).
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `erp_employee`")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `erp_employee` (" +
+                        "`employeeCode` TEXT NOT NULL, " +
+                        "`fullName` TEXT NOT NULL, " +
+                        "`isActive` INTEGER NOT NULL, " +
+                        "`hasFaceOnServer` INTEGER NOT NULL, " +
+                        "`faceUpdatedAt` TEXT, " +
+                        "`syncedAt` TEXT NOT NULL, " +
+                        "`birthDate` TEXT, " +
+                        "`lateEarlyCount30d` INTEGER NOT NULL, " +
+                        "`commendationCount` INTEGER NOT NULL, " +
+                        "`cardId` TEXT, " +
+                        "PRIMARY KEY(`employeeCode`))"
+                )
+                db.execSQL("ALTER TABLE `attendance_event_local` ADD COLUMN `method` TEXT NOT NULL DEFAULT 'Face'")
+                db.execSQL("ALTER TABLE `attendance_event_local` ADD COLUMN `cardId` TEXT")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `card_assignment` (" +
+                        "`cardId` TEXT NOT NULL, " +
+                        "`employeeCode` TEXT NOT NULL, " +
+                        "`assignedAt` TEXT NOT NULL, " +
+                        "`syncStatus` TEXT NOT NULL, " +
+                        "`syncedAt` TEXT, " +
+                        "PRIMARY KEY(`cardId`))"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `forgot_card_log` (" +
+                        "`localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`employeeCode` TEXT NOT NULL, " +
+                        "`fullName` TEXT NOT NULL, " +
+                        "`eventTimeUtc` TEXT NOT NULL, " +
+                        "`dateVn` TEXT NOT NULL, " +
+                        "`monthVn` TEXT NOT NULL, " +
+                        "`photoJpeg` BLOB, " +
+                        "`deviceCode` TEXT NOT NULL, " +
+                        "`syncStatus` TEXT NOT NULL, " +
+                        "`syncedAt` TEXT)"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `employee_month_summary` (" +
+                        "`employeeCode` TEXT NOT NULL, " +
+                        "`month` TEXT NOT NULL, " +
+                        "`workDays` REAL NOT NULL, " +
+                        "`otRegularHours` REAL NOT NULL, " +
+                        "`otSundayHours` REAL NOT NULL, " +
+                        "`otHolidayHours` REAL NOT NULL, " +
+                        "`leaveDays` REAL NOT NULL, " +
+                        "`disciplinaryCount` INTEGER NOT NULL, " +
+                        "`commendationCount` INTEGER NOT NULL, " +
+                        "`forgotCardCount` INTEGER NOT NULL, " +
+                        "`penaltyAmount` INTEGER NOT NULL, " +
+                        "`syncedAt` TEXT NOT NULL, " +
+                        "PRIMARY KEY(`employeeCode`, `month`))"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -100,7 +173,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     // KHÔNG dùng fallbackToDestructiveMigration — sẽ xoá sạch khuôn mặt đã enroll
                     // và sự kiện chưa đồng bộ trên tablet đang chạy bản cũ.
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build().also { instance = it }
             }
     }

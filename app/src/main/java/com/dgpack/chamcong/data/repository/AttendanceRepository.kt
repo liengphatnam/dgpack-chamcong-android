@@ -2,6 +2,7 @@ package com.dgpack.chamcong.data.repository
 
 import com.dgpack.chamcong.data.db.AttendanceEventDao
 import com.dgpack.chamcong.data.db.AttendanceEventEntity
+import com.dgpack.chamcong.data.db.AttendanceMethod
 import com.dgpack.chamcong.data.db.SyncStatus
 import com.dgpack.chamcong.sync.AttendanceSyncSource
 import com.dgpack.chamcong.util.DebounceChecker
@@ -36,7 +37,9 @@ class AttendanceRepository(private val dao: AttendanceEventDao) : AttendanceSync
     suspend fun recordEventIfNotDebounced(
         employeeCode: String,
         deviceCode: String,
-        debounceMinutes: Int
+        debounceMinutes: Int,
+        method: String = AttendanceMethod.FACE,
+        cardId: String? = null
     ): Boolean {
         val last = dao.getLastEventForEmployee(employeeCode)
         val lastInstant = last?.let { TimeUtils.apiStringToInstant(it.eventTimeUtc) }
@@ -50,7 +53,9 @@ class AttendanceRepository(private val dao: AttendanceEventDao) : AttendanceSync
                 eventTimeUtc = nowIso,
                 deviceCode = deviceCode,
                 syncStatus = SyncStatus.PENDING,
-                createdAt = nowIso
+                createdAt = nowIso,
+                method = method,
+                cardId = cardId
             )
         )
         return true

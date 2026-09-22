@@ -1,6 +1,7 @@
 package com.dgpack.chamcong
 
 import android.app.Application
+import com.dgpack.chamcong.card.CardRepository
 import com.dgpack.chamcong.data.db.AppDatabase
 import com.dgpack.chamcong.data.prefs.SettingsRepository
 import com.dgpack.chamcong.data.repository.AttendanceRepository
@@ -40,6 +41,17 @@ class ChamCongApplication : Application() {
         )
     }
 
+    // Thẻ từ: gán thẻ, quên thẻ (+ ảnh bằng chứng), cache chi tiết công tháng.
+    val cardRepository: CardRepository by lazy {
+        CardRepository(
+            cardDao = database.cardAssignmentDao(),
+            forgotDao = database.forgotCardLogDao(),
+            summaryDao = database.employeeMonthSummaryDao(),
+            erpDao = database.erpEmployeeDao(),
+            enrolledDao = database.enrolledEmployeeDao()
+        )
+    }
+
     // Đồng bộ danh sách NV + embedding với ERP (API_FACE_SYNC.md) — trạng thái chia sẻ cho UI.
     val employeeSyncCoordinator: EmployeeSyncCoordinator by lazy { EmployeeSyncCoordinator(this) }
 
@@ -51,6 +63,8 @@ class ChamCongApplication : Application() {
         SyncManager.schedulePeriodic(this)
         applicationScope.launch {
             employeeRepository.refreshCache()
+            // Giữ nhật ký quên thẻ / cache công 2 tháng trên máy.
+            runCatching { cardRepository.purgeOld() }
         }
     }
 }

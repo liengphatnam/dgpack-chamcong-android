@@ -1,5 +1,8 @@
 package com.dgpack.chamcong.sync
 
+import com.dgpack.chamcong.card.CardRepository
+import com.dgpack.chamcong.card.CardScanBus
+import com.dgpack.chamcong.data.db.EmployeeMonthSummaryEntity
 import com.dgpack.chamcong.data.db.EnrolledEmployeeEntity
 import com.dgpack.chamcong.data.db.ErpEmployeeEntity
 import com.dgpack.chamcong.data.db.SyncStatus
@@ -8,7 +11,11 @@ import com.dgpack.chamcong.face.FaceEmbedder
 import com.dgpack.chamcong.network.AttendanceApi
 import com.dgpack.chamcong.network.FaceEmbeddingUploadRequest
 import com.dgpack.chamcong.network.FaceEmbeddingUploadResult
+import com.dgpack.chamcong.network.CardAssignmentUploadRequest
+import com.dgpack.chamcong.network.CardAssignmentUploadResult
 import com.dgpack.chamcong.network.FaceModelInfo
+import com.dgpack.chamcong.network.ForgotCardUploadRequest
+import com.dgpack.chamcong.network.ForgotCardUploadResult
 import com.dgpack.chamcong.network.LuckyDrawUploadRequest
 import com.dgpack.chamcong.network.LuckyDrawUploadResult
 import com.dgpack.chamcong.util.TimeUtils
@@ -30,7 +37,10 @@ sealed class EmployeeSyncOutcome {
         val downloaded: Int,
         val unknownEmployee: Int,
         val missingFace: Int,
-        val luckyDrawsUploaded: Int = 0
+        val luckyDrawsUploaded: Int = 0,
+        val cardsUploaded: Int = 0,
+        val forgotCardsUploaded: Int = 0,
+        val monthSummaryRows: Int = 0
     ) : EmployeeSyncOutcome()
 
     /** Chưa nhập API key/DeviceCode ở Cài đặt — không gọi mạng. */
@@ -56,7 +66,8 @@ sealed class EmployeeSyncOutcome {
  */
 class EmployeeSyncEngine(
     private val source: EmployeeSyncSource,
-    private val luckyDrawSource: LuckyDrawSyncSource? = null
+    private val luckyDrawSource: LuckyDrawSyncSource? = null,
+    private val cardSource: CardSyncSource? = null
 ) {
 
     suspend fun sync(
@@ -85,7 +96,8 @@ class EmployeeSyncEngine(
                 // .NET hay trả "1990-08-20T00:00:00" -> chỉ giữ phần ngày.
                 birthDate = dto.birthDate?.trim()?.take(10)?.takeIf { it.length == 10 },
                 lateEarlyCount30d = dto.lateEarlyCount30d,
-                commendationCount = dto.commendationCount
+                commendationCount = dto.commendationCount,
+                cardId = dto.cardId?.let { CardScanBus.normalize(it) }?.ifEmpty { null }
             )
         }
         source.replaceErpEmployees(erpEmployees)
@@ -162,6 +174,11 @@ class EmployeeSyncEngine(
         // ---- 4. Đẩy sổ trúng thưởng lon nước ngọt lên ERP (phụ) ----
         val luckyDrawsUploaded = uploadLuckyDraws(api, apiKey, deviceCode)
 
+        // ---- 5–7. Thẻ từ (phụ): thẻ gán trên máy, nhật ký quên thẻ, chi tiết công tháng ----
+        val cardsUploaded = uploadCardAssignments(api, apiKey, deviceCode)
+        val forgotUploaded = uploadForgotCards(api, apiKey, deviceCode)
+        val summaryRows = downloadMonthSummary(api, apiKey)
+
         // ---- Thống kê NV chưa có khuôn mặt ở đâu cả ----
         val enrolledCodes = source.getAllEnrolled().map { it.employeeCode }.toSet()
         val missingFace = erpEmployees.count { it.isActive && !it.hasFaceOnServer && it.employeeCode !in enrolledCodes }
@@ -172,8 +189,105 @@ class EmployeeSyncEngine(
             downloaded = downloaded,
             unknownEmployee = unknown,
             missingFace = missingFace,
-            luckyDrawsUploaded = luckyDrawsUploaded
+            luckyDrawsUploaded = luckyDrawsUploaded,
+            cardsUploaded = cardsUploaded,
+            forgotCardsUploaded = forgotUploaded,
+            monthSummaryRows = summaryRows
         )
+    }
+
+    /** Bước 5 (phụ, lỗi -> giữ Pending): thẻ gán trên thiết bị. */
+    private suspend fun uploadCardAssignments(api: AttendanceApi, apiKey: String, deviceCode: String): Int {
+        val cards = cardSource ?: return 0
+        val pending = cards.getPendingCardAssignments(CARD_BATCH_SIZE)
+        if (pending.isEmpty()) return 0
+        val body = pending.map { CardAssignmentUploadRequest(it.cardId, it.employeeCode, it.assignedAt, deviceCode) }
+        val response = try {
+            api.uploadCardAssignments(apiKey, body)
+        } catch (e: IOException) {
+            return 0
+        }
+        if (response.code() != 200) return 0
+        val results = response.body().orEmpty()
+        var uploaded = 0
+        pending.forEachIndexed { index, card ->
+            when (results.getOrNull(index)?.status) {
+                CardAssignmentUploadResult.STATUS_SAVED -> {
+                    cards.markCardAssignmentSynced(card.cardId, SyncStatus.SYNCED)
+                    uploaded++
+                }
+                CardAssignmentUploadResult.STATUS_UNKNOWN_EMPLOYEE ->
+                    cards.markCardAssignmentSynced(card.cardId, SyncStatus.UNKNOWN_EMPLOYEE)
+                else -> Unit
+            }
+        }
+        return uploaded
+    }
+
+    /** Bước 6 (phụ): nhật ký quên thẻ + ảnh bằng chứng (JPEG base64, ~10 KB/ảnh). */
+    private suspend fun uploadForgotCards(api: AttendanceApi, apiKey: String, deviceCode: String): Int {
+        val cards = cardSource ?: return 0
+        val pending = cards.getPendingForgotCardLogs(FORGOT_BATCH_SIZE)
+        if (pending.isEmpty()) return 0
+        val body = pending.map {
+            ForgotCardUploadRequest(
+                employeeCode = it.employeeCode,
+                eventTime = it.eventTimeUtc,
+                deviceCode = deviceCode,
+                photoBase64 = it.photoJpeg?.let { bytes -> java.util.Base64.getEncoder().encodeToString(bytes) }
+            )
+        }
+        val response = try {
+            api.uploadForgotCards(apiKey, body)
+        } catch (e: IOException) {
+            return 0
+        }
+        if (response.code() != 200) return 0
+        val results = response.body().orEmpty()
+        var uploaded = 0
+        pending.forEachIndexed { index, log ->
+            when (results.getOrNull(index)?.status) {
+                ForgotCardUploadResult.STATUS_SAVED, ForgotCardUploadResult.STATUS_DUPLICATE -> {
+                    cards.markForgotCardLogSynced(log.localId, SyncStatus.SYNCED)
+                    uploaded++
+                }
+                ForgotCardUploadResult.STATUS_UNKNOWN_EMPLOYEE ->
+                    cards.markForgotCardLogSynced(log.localId, SyncStatus.UNKNOWN_EMPLOYEE)
+                else -> Unit
+            }
+        }
+        return uploaded
+    }
+
+    /** Bước 7 (phụ): kéo chi tiết công tháng hiện tại (lịch VN) về cache. */
+    private suspend fun downloadMonthSummary(api: AttendanceApi, apiKey: String): Int {
+        val cards = cardSource ?: return 0
+        val month = CardRepository.monthKey(TimeUtils.vnToday())
+        val response = try {
+            api.getMonthSummary(apiKey, month)
+        } catch (e: IOException) {
+            return 0
+        }
+        if (response.code() != 200) return 0
+        val now = TimeUtils.nowUtcIso()
+        val rows = response.body().orEmpty().map {
+            EmployeeMonthSummaryEntity(
+                employeeCode = it.employeeCode.trim(),
+                month = month,
+                workDays = it.workDays,
+                otRegularHours = it.otRegularHours,
+                otSundayHours = it.otSundayHours,
+                otHolidayHours = it.otHolidayHours,
+                leaveDays = it.leaveDays,
+                disciplinaryCount = it.disciplinaryCount,
+                commendationCount = it.commendationCount,
+                forgotCardCount = it.forgotCardCount,
+                penaltyAmount = it.penaltyAmount,
+                syncedAt = now
+            )
+        }
+        cards.replaceMonthSummary(month, rows)
+        return rows.size
     }
 
     /**
@@ -231,6 +345,9 @@ class EmployeeSyncEngine(
     companion object {
         private const val UPLOAD_BATCH_SIZE = 50
         private const val LUCKY_DRAW_BATCH_SIZE = 200
+        private const val CARD_BATCH_SIZE = 200
+        /** Mỗi dòng kèm ảnh ~10 KB -> 50 dòng ~ 0.5 MB/request. */
+        private const val FORGOT_BATCH_SIZE = 50
 
         /**
          * Chưa từng đẩy lên, hoặc đã enroll lại sau lần đẩy gần nhất. So sánh chuỗi ISO

@@ -166,6 +166,45 @@ CREATE TABLE hr.LuckyDrawWin
 );
 ```
 
+## 5. `POST /api/v1/attendance/cards` — thẻ từ gán trên thiết bị
+
+Chấm công chính giờ là **quét thẻ từ** (NFC tích hợp hoặc đầu đọc USB/Bluetooth kiểu bàn phím).
+Admin gán thẻ ngay trên tablet (màn *Gán thẻ từ*: chọn NV trong danh sách ERP → quét thẻ → tự lưu),
+app đẩy lên ERP ở lần đồng bộ tới. `GET employees` cũng nên trả `cardId` để tablet khác dùng được.
+
+```json
+[ { "cardId": "04A1B2C3D4", "employeeCode": "NV001", "assignedAt": "2026-09-23T01:00:00", "deviceCode": "Cong-Chinh" } ]
+```
+Response cùng thứ tự: `{ "cardId", "status": "Saved" | "UnknownEmployee" }`. Upsert theo `cardId`
+(thẻ chuyển sang người khác thì cập nhật). `cardId` đã chuẩn hoá: chữ hoa, chỉ `0-9A-Z`.
+
+## 6. `POST /api/v1/attendance/forgot-card` — nhật ký quên thẻ (kèm ảnh bằng chứng)
+
+NV quên thẻ: bấm "Quên mang thẻ" → nhập mã → xác nhận tên → chớp mắt 2 lần → máy tự chụp ảnh mặt
+~200 px làm bằng chứng → ghi sự kiện chấm công (vẫn qua `sync-events` bình thường) + 1 dòng nhật ký.
+Lượt này **không quay thưởng**. Tiền phạt tính theo tháng bằng luật cài ở Cài đặt (mặc định: từ lần 2
+trừ 50.000, cứ 2 lần trừ thêm 50.000). Máy giữ nhật ký 2 tháng.
+
+```json
+[ { "employeeCode": "NV001", "eventTime": "2026-09-23T00:31:12", "deviceCode": "Cong-Chinh",
+    "photoBase64": "/9j/4AAQ…" } ]
+```
+Response cùng thứ tự: `{ "employeeCode", "eventTime", "status": "Saved" | "Duplicate" | "UnknownEmployee" }`.
+Chống trùng theo `(EmployeeID, EventTime)`. Ảnh JPEG ~10 KB, tối đa 50 dòng/request.
+
+## 7. `GET /api/v1/attendance/month-summary?month=yyyy-MM` — chi tiết công tháng
+
+Sau khi quét thẻ, NV bấm "Chi tiết công tháng này" và thấy ngay (kể cả mất mạng) — app cache toàn bộ
+bảng này mỗi lần đồng bộ (15 phút). ERP tính **tới hết hôm qua** (hôm nay chưa tính).
+
+```json
+[ { "employeeCode": "NV001", "workDays": 18.5, "otRegularHours": 12, "otSundayHours": 8,
+    "otHolidayHours": 0, "leaveDays": 1, "disciplinaryCount": 0, "commendationCount": 1,
+    "forgotCardCount": 1, "penaltyAmount": 0 } ]
+```
+`forgotCardCount`/`penaltyAmount` là ERP tổng hợp từ mọi cổng; tablet hiện `max(ERP, máy tự đếm)` và
+tính lại tiền theo luật đang cài.
+
 ## Bảng gợi ý phía SQL (`hr` schema)
 
 ```sql

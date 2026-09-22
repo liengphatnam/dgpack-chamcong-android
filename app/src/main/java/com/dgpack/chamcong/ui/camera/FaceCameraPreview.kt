@@ -11,6 +11,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,11 +32,22 @@ fun FaceCameraPreview(
     modifier: Modifier = Modifier,
     targetFps: Int = 3,
     onFaceDetected: (FaceDetectionResult) -> Unit,
-    onNoFace: () -> Unit = {}
+    onNoFace: () -> Unit = {},
+    wantEvidence: Boolean = false
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+    val providerHolder = remember { arrayOfNulls<ProcessCameraProvider>(1) }
+
+    // Rời màn hình (vd xong bước chụp bằng chứng quên thẻ) -> tắt camera + luồng phân tích ngay,
+    // không để chạy ngầm tốn CPU cho tới lần bind kế tiếp.
+    DisposableEffect(Unit) {
+        onDispose {
+            providerHolder[0]?.unbindAll()
+            analysisExecutor.shutdown()
+        }
+    }
 
     AndroidView(
         modifier = modifier.fillMaxSize(),
@@ -50,6 +62,8 @@ fun FaceCameraPreview(
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
+                if (analysisExecutor.isShutdown) return@addListener // màn hình đã đóng trước khi camera sẵn sàng
+                providerHolder[0] = cameraProvider
 
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
@@ -75,7 +89,12 @@ fun FaceCameraPreview(
                     .build()
                 analysis.setAnalyzer(
                     analysisExecutor,
-                    FaceAnalyzer(targetFps = targetFps, onFaceDetected = onFaceDetected, onNoFace = onNoFace)
+                    FaceAnalyzer(
+                        targetFps = targetFps,
+                        onFaceDetected = onFaceDetected,
+                        onNoFace = onNoFace,
+                        wantEvidence = wantEvidence
+                    )
                 )
 
                 cameraProvider.unbindAll()

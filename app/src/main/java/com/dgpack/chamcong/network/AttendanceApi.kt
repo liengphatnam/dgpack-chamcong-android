@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface AttendanceApi {
     /**
@@ -49,4 +50,27 @@ interface AttendanceApi {
         @Header("X-Attendance-Api-Key") apiKey: String,
         @Body draws: List<LuckyDrawUploadRequest>
     ): Response<List<LuckyDrawUploadResult>>
+
+    // ===== Thẻ từ — API_FACE_SYNC.md mục 5–7. 404 = ERP chưa triển khai, app bỏ qua, giữ Pending. =====
+
+    /** Thẻ gán trên thiết bị (upsert theo cardId). */
+    @POST("api/v1/attendance/cards")
+    suspend fun uploadCardAssignments(
+        @Header("X-Attendance-Api-Key") apiKey: String,
+        @Body cards: List<CardAssignmentUploadRequest>
+    ): Response<List<CardAssignmentUploadResult>>
+
+    /** Nhật ký quên thẻ kèm ảnh bằng chứng. */
+    @POST("api/v1/attendance/forgot-card")
+    suspend fun uploadForgotCards(
+        @Header("X-Attendance-Api-Key") apiKey: String,
+        @Body logs: List<ForgotCardUploadRequest>
+    ): Response<List<ForgotCardUploadResult>>
+
+    /** Chi tiết công tháng của toàn bộ NV (tới hết hôm qua) — cache để hiện sau khi quét thẻ. */
+    @GET("api/v1/attendance/month-summary")
+    suspend fun getMonthSummary(
+        @Header("X-Attendance-Api-Key") apiKey: String,
+        @Query("month") month: String
+    ): Response<List<MonthSummaryDto>>
 }

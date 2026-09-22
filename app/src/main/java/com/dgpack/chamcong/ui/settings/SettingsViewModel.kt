@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dgpack.chamcong.ChamCongApplication
 import com.dgpack.chamcong.data.prefs.AppSettings
+import com.dgpack.chamcong.data.prefs.AttendanceMode
 import com.dgpack.chamcong.data.prefs.DEFAULT_LUCKY_DRAW_DAILY_QUOTA
 import com.dgpack.chamcong.luckydraw.LuckyDrawEngine
 import com.dgpack.chamcong.data.prefs.DEFAULT_MIN_CONFIDENCE_PERCENT
@@ -29,6 +30,10 @@ data class SettingsUiState(
     val luckyDrawStartDate: String = "",
     val luckyDrawEndDate: String = "",
     val luckyDrawDailyQuota: String = "",
+    val cardMode: Boolean = true,
+    val forgotFirstAt: String = "",
+    val forgotEvery: String = "",
+    val forgotAmount: String = "",
     val savedOnce: Boolean = false,
     val pinError: Boolean = false,
     val luckyDateError: Boolean = false,
@@ -63,6 +68,10 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
         luckyDrawStartDate = settings.luckyDrawStartDate,
         luckyDrawEndDate = settings.luckyDrawEndDate,
         luckyDrawDailyQuota = settings.luckyDrawDailyQuota.toString(),
+        cardMode = settings.attendanceMode == AttendanceMode.CARD,
+        forgotFirstAt = settings.forgotPenaltyFirstAt.toString(),
+        forgotEvery = settings.forgotPenaltyEvery.toString(),
+        forgotAmount = settings.forgotPenaltyAmount.toString(),
         lastSync = lastSync
     )
 
@@ -75,6 +84,10 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
     fun onLuckyDrawStartChange(v: String) = _state.update { it.copy(luckyDrawStartDate = v, savedOnce = false, luckyDateError = false) }
     fun onLuckyDrawEndChange(v: String) = _state.update { it.copy(luckyDrawEndDate = v, savedOnce = false, luckyDateError = false) }
     fun onLuckyDrawQuotaChange(v: String) = _state.update { it.copy(luckyDrawDailyQuota = v.filter { c -> c.isDigit() }.take(3), savedOnce = false) }
+    fun onCardModeChange(v: Boolean) = _state.update { it.copy(cardMode = v, savedOnce = false) }
+    fun onForgotFirstAtChange(v: String) = _state.update { it.copy(forgotFirstAt = v.filter { c -> c.isDigit() }.take(2), savedOnce = false) }
+    fun onForgotEveryChange(v: String) = _state.update { it.copy(forgotEvery = v.filter { c -> c.isDigit() }.take(2), savedOnce = false) }
+    fun onForgotAmountChange(v: String) = _state.update { it.copy(forgotAmount = v.filter { c -> c.isDigit() }.take(9), savedOnce = false) }
     fun onAdminPinChange(v: String) {
         // Chỉ nhận số, tối đa 4 ký tự — bàn phím số nên hiếm khi gõ ký tự khác nhưng lọc
         // cho chắc (dán text chẳng hạn).
@@ -113,7 +126,11 @@ class SettingsViewModel(private val app: ChamCongApplication) : ViewModel() {
             luckyDrawStartDate = current.luckyDrawStartDate.trim(),
             luckyDrawEndDate = current.luckyDrawEndDate.trim(),
             luckyDrawDailyQuota = current.luckyDrawDailyQuota.toIntOrNull()?.coerceIn(0, 999)
-                ?: DEFAULT_LUCKY_DRAW_DAILY_QUOTA
+                ?: DEFAULT_LUCKY_DRAW_DAILY_QUOTA,
+            attendanceMode = if (current.cardMode) AttendanceMode.CARD else AttendanceMode.FACE,
+            forgotPenaltyFirstAt = current.forgotFirstAt.toIntOrNull()?.coerceIn(0, 99) ?: AppSettings().forgotPenaltyFirstAt,
+            forgotPenaltyEvery = current.forgotEvery.toIntOrNull()?.coerceIn(1, 99) ?: AppSettings().forgotPenaltyEvery,
+            forgotPenaltyAmount = current.forgotAmount.toLongOrNull()?.coerceAtLeast(0) ?: AppSettings().forgotPenaltyAmount
         )
         app.settingsRepository.save(settings)
         _state.value = toUiState(settings, current.lastSync).copy(savedOnce = true)

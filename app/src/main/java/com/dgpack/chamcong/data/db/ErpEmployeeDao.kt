@@ -17,6 +17,9 @@ interface ErpEmployeeDao {
     @Query("SELECT * FROM erp_employee WHERE employeeCode = :employeeCode LIMIT 1")
     suspend fun getByCode(employeeCode: String): ErpEmployeeEntity?
 
+    @Query("SELECT * FROM erp_employee WHERE cardId = :cardId LIMIT 1")
+    suspend fun getByCardId(cardId: String): ErpEmployeeEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(employees: List<ErpEmployeeEntity>)
 

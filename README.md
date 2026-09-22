@@ -44,6 +44,13 @@ phân phối rộng hơn, nên tự convert model từ nguồn license rõ ràng
 - `data/db/` — Room (SQLite) v3: `enrolled_employee` (có `faceSyncedAt`), `attendance_event_local`,
   `erp_employee` (bản sao danh sách NV kéo từ ERP, kèm ngày sinh / số lần trễ-sớm / số lần khen thưởng),
   `lucky_draw_win` (sổ người trúng thưởng lon nước ngọt).
+- `card/` + `ui/card/` — **chấm công bằng thẻ từ** (mặc định; đổi về khuôn mặt ở Cài đặt): NFC tích hợp
+  hoặc đầu đọc USB/Bluetooth kiểu bàn phím (`CardScanBus`, `MainActivity`). Gán thẻ ở màn *Gán thẻ từ*
+  (danh sách ERP có tìm kiếm → quét thẻ → tự lưu → về danh sách). Quên thẻ: nhập mã → xác nhận tên →
+  chớp mắt 2 lần chụp ảnh bằng chứng, không quay thưởng, phạt theo luật cài ở Cài đặt
+  (`ForgotCardPolicy`), nhật ký giữ 2 tháng ở màn *Nhật ký quên thẻ*. Sau khi quét có nút
+  *Chi tiết công tháng này* (cache từ ERP `month-summary`). Endpoint mục 5–7 của
+  [`API_FACE_SYNC.md`](./API_FACE_SYNC.md).
 - `luckydraw/LuckyDrawEngine.kt` + `LuckyDrawRepository.kt` — **chương trình trúng thưởng lon nước
   ngọt tháng 8–9/2026**: mỗi ngày ~8 người quét mặt trúng 1 lon (quay có trọng số: không đi
   trễ/về sớm ×2, mỗi lần khen thưởng +50 %, đã trúng ×0.5), đúng sinh nhật chắc chắn 3 lon; chỉ quay

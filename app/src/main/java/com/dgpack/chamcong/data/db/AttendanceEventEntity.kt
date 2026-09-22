@@ -11,6 +11,14 @@ object SyncStatus {
     const val FAILED = "Failed"
 }
 
+/** Cách ghi nhận sự kiện — chỉ để hiển thị/thống kê trên máy, KHÔNG gửi lên sync-events (contract cố định 3 field). */
+object AttendanceMethod {
+    const val FACE = "Face"
+    const val CARD = "Card"
+    /** Quên thẻ: nhập mã + chớp mắt 2 lần chụp ảnh bằng chứng (forgot_card_log). */
+    const val FORGOT_CARD = "ForgotCard"
+}
+
 /**
  * Ledger append-only, mirror tinh thần hr.AttendanceEvent bên ERP.
  * KHÔNG bao giờ UPDATE employeeCode/eventTimeUtc của 1 dòng đã tạo — chỉ được
@@ -26,5 +34,7 @@ data class AttendanceEventEntity(
     val syncStatus: String = SyncStatus.PENDING,
     val createdAt: String,
     val syncedAt: String? = null,
-    val syncAttempts: Int = 0
+    val syncAttempts: Int = 0,
+    val method: String = AttendanceMethod.FACE,
+    val cardId: String? = null
 )

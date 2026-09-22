@@ -26,5 +26,7 @@ data class ErpEmployeeEntity(
     /** Số lần đi trễ/về sớm trong 30 ngày gần nhất (ERP tính) — 0 lần = trọng số x2. */
     val lateEarlyCount30d: Int = 0,
     /** Số lần được khen thưởng / phối hợp nội quy ghi trong Log ERP (trong đợt) — mỗi lần +50% trọng số. */
-    val commendationCount: Int = 0
+    val commendationCount: Int = 0,
+    /** Mã thẻ từ ERP đã gán cho NV (đã chuẩn hoá), null nếu chưa có. Thẻ gán trên máy (card_assignment) ưu tiên hơn. */
+    val cardId: String? = null
 )

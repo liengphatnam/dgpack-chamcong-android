@@ -45,7 +45,9 @@ fun QueueScreen(
     onOpenEnroll: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenEmployees: () -> Unit,
-    onOpenLuckyDraw: () -> Unit
+    onOpenAssignCard: () -> Unit,
+    onOpenLuckyDraw: () -> Unit,
+    onOpenForgotLog: () -> Unit
 ) {
     val viewModel = appViewModel { QueueViewModel(it) }
     val state by viewModel.uiState.collectAsState()
@@ -97,6 +99,7 @@ fun QueueScreen(
                         Text(stringResource(R.string.nut_thu_lai_unknown))
                     }
                 }
+                Button(onClick = onOpenAssignCard) { Text(stringResource(R.string.nut_gan_the)) }
                 OutlinedButton(onClick = onOpenEnroll) { Text(stringResource(R.string.tieu_de_enroll)) }
                 OutlinedButton(onClick = onOpenEmployees) {
                     Text(
@@ -106,6 +109,7 @@ fun QueueScreen(
                 }
                 // Cấp 1 chỉ được đồng bộ + đăng ký khuôn mặt; sổ trúng thưởng và cài đặt cần cấp 2.
                 if (level == AdminLevel.LEVEL_2) {
+                    OutlinedButton(onClick = onOpenForgotLog) { Text(stringResource(R.string.nut_nhat_ky_quen_the)) }
                     OutlinedButton(onClick = onOpenLuckyDraw) { Text(stringResource(R.string.tieu_de_trung_thuong)) }
                     OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.tieu_de_cai_dat)) }
                 } else {

@@ -28,7 +28,9 @@ data class FaceDetectionResult(
     val faceWidthPx: Int,
     val aligned: Boolean,
     val detectMs: Long,
-    val frame: FaceFrameInfo
+    val frame: FaceFrameInfo,
+    /** Ảnh vùng mặt thu nhỏ (~200 px) để lưu làm bằng chứng — chỉ có khi [FaceAnalyzer.wantEvidence]. Người nhận phải recycle. */
+    val evidenceBitmap: Bitmap? = null
 )
 
 /**
@@ -43,7 +45,8 @@ data class FaceDetectionResult(
 class FaceAnalyzer(
     private val targetFps: Int = 3,
     private val onFaceDetected: (FaceDetectionResult) -> Unit,
-    private val onNoFace: () -> Unit = {}
+    private val onNoFace: () -> Unit = {},
+    private val wantEvidence: Boolean = false
 ) : ImageAnalysis.Analyzer {
 
     private val minIntervalMs = 1000L / targetFps
@@ -61,6 +64,8 @@ class FaceAnalyzer(
         /** ML Kit phát hiện trên khung thu nhỏ từng này lần (chỉ khi khung gốc đủ rộng). */
         const val DETECT_DOWNSCALE = 2
         const val DOWNSCALE_MIN_WIDTH = 640
+        /** Ảnh bằng chứng quên thẻ: 200 px bề rộng, đủ nhận ra người, ~10 KB JPEG. */
+        const val EVIDENCE_WIDTH_PX = 200
     }
 
     private val detector = FaceDetection.getClient(
@@ -141,6 +146,12 @@ class FaceAnalyzer(
                             )
                             ImageUtils.cropAndResizeFace(face.bitmap, boxInRegion)
                         }
+                        val evidence = if (wantEvidence) {
+                            val scale = EVIDENCE_WIDTH_PX.toFloat() / face.bitmap.width
+                            Bitmap.createScaledBitmap(
+                                face.bitmap, EVIDENCE_WIDTH_PX, (face.bitmap.height * scale).toInt().coerceAtLeast(1), true
+                            )
+                        } else null
                         face.bitmap.recycle()
                         val leftProb = largest.leftEyeOpenProbability
                         val rightProb = largest.rightEyeOpenProbability
@@ -173,7 +184,8 @@ class FaceAnalyzer(
                                 faceWidthPx = box.width(),
                                 aligned = aligned,
                                 detectMs = System.currentTimeMillis() - startedAt,
-                                frame = frame
+                                frame = frame,
+                                evidenceBitmap = evidence
                             )
                         )
                     } catch (_: Exception) {

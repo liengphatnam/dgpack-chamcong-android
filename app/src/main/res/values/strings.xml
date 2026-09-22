@@ -125,6 +125,60 @@
     <string name="ld_quota">Số người trúng ngẫu nhiên tối đa mỗi ngày</string>
     <string name="ld_quota_goi_y">Mặc định 8, tính riêng trên thiết bị này. Sinh nhật luôn trúng 3 lon, không tính vào số này</string>
 
+    <!-- Chấm công thẻ từ -->
+    <string name="card_quet_the">Quét thẻ để chấm công</string>
+    <string name="card_nut_quen_the">Quên mang thẻ</string>
+    <string name="card_the_la">Thẻ chưa được gán cho ai — liên hệ nhân sự</string>
+    <string name="card_da_cham_roi">Đã chấm công trước đó ít phút</string>
+    <string name="card_nut_chi_tiet">Chi tiết công tháng này</string>
+    <string name="card_nut_dong">Đóng</string>
+    <string name="card_chi_tiet_tieu_de_format">Tháng %1$s (chưa tính hôm nay)</string>
+    <string name="card_ct_chua_co_du_lieu">Chưa có dữ liệu từ ERP — sẽ cập nhật khi có mạng</string>
+    <string name="card_ct_ngay_cong">Ngày công</string>
+    <string name="card_ct_tc_thuong">Tăng ca thường (giờ)</string>
+    <string name="card_ct_tc_cn">Tăng ca chủ nhật (giờ)</string>
+    <string name="card_ct_tc_le">Tăng ca ngày lễ (giờ)</string>
+    <string name="card_ct_nghi_phep">Ngày nghỉ phép</string>
+    <string name="card_ct_quen_the">Số lần quên thẻ</string>
+    <string name="card_ct_tien_tru">Tiền đã bị trừ</string>
+    <string name="card_ct_bien_ban">Biên bản phạt</string>
+    <string name="card_ct_khen_thuong">Khen thưởng</string>
+    <string name="forgot_nhap_ma">Nhập mã nhân viên</string>
+    <string name="forgot_nut_tim">Tìm</string>
+    <string name="forgot_khong_tim_thay">Không tìm thấy mã nhân viên này</string>
+    <string name="forgot_xac_nhan">Đúng là bạn chứ? Bấm xác nhận rồi nhìn vào camera.</string>
+    <string name="forgot_nut_dung">Đúng, tiếp tục</string>
+    <string name="forgot_nut_sai">Không phải</string>
+    <string name="forgot_chop_mat_2_lan">Nhìn vào camera và chớp mắt 2 lần liên tiếp</string>
+    <string name="forgot_da_ghi_format">Đã ghi nhận quên thẻ lần thứ %1$d trong tháng</string>
+    <string name="forgot_khong_quay_thuong">Lượt này không được quay thưởng — mai nhớ mang thẻ nha!</string>
+    <string name="forgot_tru_them_format">Lần này bị trừ %1$s tiền thưởng nội quy</string>
+    <string name="forgot_tong_tru_format">Tổng tháng này đã bị trừ %1$s</string>
+    <string name="forgot_khong_tru">Chưa bị trừ tiền</string>
+    <string name="nut_huy">Huỷ</string>
+    <string name="tieu_de_gan_the">Gán thẻ từ</string>
+    <string name="nut_gan_the">Gán thẻ từ</string>
+    <string name="gan_the_quet">Quét thẻ vào máy đọc để gán cho người này</string>
+    <string name="gan_the_hien_tai_format">Thẻ hiện tại: %1$s</string>
+    <string name="gan_the_chua_co">Chưa có thẻ</string>
+    <string name="gan_the_xong_format">Đã gán thẻ %1$s</string>
+    <string name="nv_tim_kiem">Tìm theo mã, tên hoặc số thẻ</string>
+    <string name="nv_bam_de_gan_the">Chạm vào một nhân viên rồi quét thẻ để gán</string>
+    <string name="nv_da_co_the_format">%1$d/%2$d đã có thẻ</string>
+    <string name="tieu_de_nhat_ky_quen_the">Nhật ký quên thẻ</string>
+    <string name="nut_nhat_ky_quen_the">Nhật ký quên thẻ</string>
+    <string name="nk_thang_format">Tháng %1$s</string>
+    <string name="nk_tong_format">%1$d lượt · %2$d chưa đồng bộ</string>
+    <string name="nk_rong">Không có lượt quên thẻ trong tháng này</string>
+    <string name="cd_tieu_de">Chế độ chấm công ở màn hình chính</string>
+    <string name="cd_the_tu">Thẻ từ (quên thẻ thì nhập mã + chớp mắt chụp hình)</string>
+    <string name="cd_khuon_mat">Nhận diện khuôn mặt</string>
+    <string name="phat_tieu_de">Luật phạt quên thẻ (trừ tiền thưởng nội quy, tính theo tháng)</string>
+    <string name="phat_lan_dau">Bắt đầu trừ từ lần quên thứ (0 = không phạt)</string>
+    <string name="phat_moi">Sau đó cứ thêm bao nhiêu lần lại trừ tiếp</string>
+    <string name="phat_tien">Số tiền trừ mỗi mốc (đồng)</string>
+    <string name="phat_goi_y">Mặc định: từ lần 2 trừ 50.000, cứ 2 lần trừ thêm 50.000; tháng sau tính lại từ đầu</string>
+
     <!-- Chung -->
     <string name="loi_api_key_sai">API key không đúng, vào Cài đặt kiểm tra lại</string>
     <string name="loi_mang">Lỗi kết nối mạng, sẽ tự thử lại</string>

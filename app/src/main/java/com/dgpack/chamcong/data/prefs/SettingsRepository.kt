@@ -16,6 +16,12 @@ const val DEFAULT_LUCKY_DRAW_START = "2026-08-01"
 const val DEFAULT_LUCKY_DRAW_END = "2026-09-30"
 const val DEFAULT_LUCKY_DRAW_DAILY_QUOTA = 8
 
+/** Phương thức chấm công chính ở màn hình đầu. */
+object AttendanceMode {
+    const val CARD = "Card"
+    const val FACE = "Face"
+}
+
 data class AppSettings(
     val serverUrl: String = "https://dgperp.azurewebsites.net",
     val apiKey: String = "",
@@ -33,7 +39,16 @@ data class AppSettings(
     val luckyDrawStartDate: String = DEFAULT_LUCKY_DRAW_START,
     val luckyDrawEndDate: String = DEFAULT_LUCKY_DRAW_END,
     /** Số người trúng ngẫu nhiên tối đa mỗi ngày trên thiết bị này (sinh nhật không tính). */
-    val luckyDrawDailyQuota: Int = DEFAULT_LUCKY_DRAW_DAILY_QUOTA
+    val luckyDrawDailyQuota: Int = DEFAULT_LUCKY_DRAW_DAILY_QUOTA,
+    /** [AttendanceMode]: thẻ từ (mặc định) hay nhận diện khuôn mặt. */
+    val attendanceMode: String = AttendanceMode.CARD,
+    // Luật phạt quên thẻ (ForgotCardPolicy) — admin chỉnh ở Cài đặt, không code cứng.
+    /** Lần quên thứ mấy trong tháng bắt đầu bị trừ (0 = không phạt). */
+    val forgotPenaltyFirstAt: Int = 2,
+    /** Sau lần đầu, cứ thêm bao nhiêu lần lại trừ tiếp. */
+    val forgotPenaltyEvery: Int = 2,
+    /** Số tiền trừ mỗi mốc (đồng). */
+    val forgotPenaltyAmount: Long = 50_000L
 )
 
 /**
@@ -67,7 +82,11 @@ class SettingsRepository(context: Context) {
         luckyDrawEnabled = prefs.getBoolean(KEY_LUCKY_ENABLED, AppSettings().luckyDrawEnabled),
         luckyDrawStartDate = prefs.getString(KEY_LUCKY_START, null) ?: DEFAULT_LUCKY_DRAW_START,
         luckyDrawEndDate = prefs.getString(KEY_LUCKY_END, null) ?: DEFAULT_LUCKY_DRAW_END,
-        luckyDrawDailyQuota = prefs.getInt(KEY_LUCKY_QUOTA, DEFAULT_LUCKY_DRAW_DAILY_QUOTA)
+        luckyDrawDailyQuota = prefs.getInt(KEY_LUCKY_QUOTA, DEFAULT_LUCKY_DRAW_DAILY_QUOTA),
+        attendanceMode = prefs.getString(KEY_ATTENDANCE_MODE, null) ?: AttendanceMode.CARD,
+        forgotPenaltyFirstAt = prefs.getInt(KEY_FORGOT_FIRST_AT, AppSettings().forgotPenaltyFirstAt),
+        forgotPenaltyEvery = prefs.getInt(KEY_FORGOT_EVERY, AppSettings().forgotPenaltyEvery),
+        forgotPenaltyAmount = prefs.getLong(KEY_FORGOT_AMOUNT, AppSettings().forgotPenaltyAmount)
     )
 
     fun save(settings: AppSettings) {
@@ -82,6 +101,10 @@ class SettingsRepository(context: Context) {
             .putString(KEY_LUCKY_START, settings.luckyDrawStartDate)
             .putString(KEY_LUCKY_END, settings.luckyDrawEndDate)
             .putInt(KEY_LUCKY_QUOTA, settings.luckyDrawDailyQuota)
+            .putString(KEY_ATTENDANCE_MODE, settings.attendanceMode)
+            .putInt(KEY_FORGOT_FIRST_AT, settings.forgotPenaltyFirstAt)
+            .putInt(KEY_FORGOT_EVERY, settings.forgotPenaltyEvery)
+            .putLong(KEY_FORGOT_AMOUNT, settings.forgotPenaltyAmount)
             .apply()
         _settings.value = settings
     }
@@ -101,6 +124,10 @@ class SettingsRepository(context: Context) {
         private const val KEY_LUCKY_START = "lucky_draw_start"
         private const val KEY_LUCKY_END = "lucky_draw_end"
         private const val KEY_LUCKY_QUOTA = "lucky_draw_daily_quota"
+        private const val KEY_ATTENDANCE_MODE = "attendance_mode"
+        private const val KEY_FORGOT_FIRST_AT = "forgot_penalty_first_at"
+        private const val KEY_FORGOT_EVERY = "forgot_penalty_every"
+        private const val KEY_FORGOT_AMOUNT = "forgot_penalty_amount"
 
         @Volatile
         private var instance: SettingsRepository? = null

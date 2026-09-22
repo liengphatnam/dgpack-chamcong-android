@@ -108,6 +108,43 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // ---- Chế độ chấm công + luật phạt quên thẻ ----
+            Text(stringResource(R.string.cd_tieu_de), style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    if (state.cardMode) stringResource(R.string.cd_the_tu) else stringResource(R.string.cd_khuon_mat),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(checked = state.cardMode, onCheckedChange = viewModel::onCardModeChange)
+            }
+            Text(stringResource(R.string.phat_tieu_de), style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = state.forgotFirstAt,
+                onValueChange = viewModel::onForgotFirstAtChange,
+                label = { Text(stringResource(R.string.phat_lan_dau)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.forgotEvery,
+                onValueChange = viewModel::onForgotEveryChange,
+                label = { Text(stringResource(R.string.phat_moi)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.forgotAmount,
+                onValueChange = viewModel::onForgotAmountChange,
+                label = { Text(stringResource(R.string.phat_tien)) },
+                supportingText = { Text(stringResource(R.string.phat_goi_y)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
             // ---- Chương trình trúng thưởng lon nước ngọt (tháng 8–9/2026) ----
             Text(stringResource(R.string.ld_tieu_de_cai_dat), style = MaterialTheme.typography.titleMedium)
             Row(
