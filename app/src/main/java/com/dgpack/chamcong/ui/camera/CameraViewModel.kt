@@ -114,7 +114,8 @@ class CameraViewModel(private val app: ChamCongApplication) : ViewModel() {
                 val embedding = app.faceEmbedder.embed(result.croppedBitmap)
                 val embedMs = System.currentTimeMillis() - embedStart
                 _uiState.value = _uiState.value.copy(
-                    perfLabel = "phát hiện ${result.detectMs} ms · nhận diện $embedMs ms · mặt ${result.faceWidthPx} px",
+                    perfLabel = "phát hiện ${result.detectMs} ms · nhận diện $embedMs ms · mặt ${result.faceWidthPx} px" +
+                        " · khung ${result.frame.imageWidth}x${result.frame.imageHeight}",
                     frameWidth = result.frame.imageWidth,
                     frameHeight = result.frame.imageHeight
                 )

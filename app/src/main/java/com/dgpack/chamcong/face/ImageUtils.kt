@@ -108,6 +108,55 @@ object ImageUtils {
         return out
     }
 
+    /** Khung NV21 đã thu nhỏ để đưa vào ML Kit (toạ độ gốc cảm biến, chưa xoay). */
+    class Nv21Frame(val data: ByteArray, val width: Int, val height: Int)
+
+    /**
+     * Tạo khung NV21 thu nhỏ [factor] lần bằng cách lấy mẫu thưa (mỗi [factor] pixel lấy 1) —
+     * ~150k phép copy cho 800x600/2, vài ms. ML Kit chỉ cần TÌM mặt, không cần nét; chạy trên
+     * ảnh 400x300 nhanh ~4 lần so với 800x600 (trên MFISO B1 PRO đo được 1100 ms/khung ở
+     * 800x600). Vị trí mặt/mắt trả về nhân lại [factor] để crop từ khung gốc đầy đủ.
+     */
+    fun downscaledNv21(image: ImageProxy, factor: Int): Nv21Frame {
+        val w = (image.width / factor) and 1.inv()
+        val h = (image.height / factor) and 1.inv()
+        val out = ByteArray(w * h * 3 / 2)
+
+        val yPlane = image.planes[0]
+        val yBuf = yPlane.buffer.duplicate().also { it.rewind() }
+        val yRow = yPlane.rowStride
+        val yPix = yPlane.pixelStride
+        val yLimit = yBuf.limit()
+        var pos = 0
+        for (row in 0 until h) {
+            val srcRow = row * factor * yRow
+            for (col in 0 until w) {
+                val i = srcRow + col * factor * yPix
+                out[pos++] = if (i < yLimit) yBuf.get(i) else 0
+            }
+        }
+
+        val uPlane = image.planes[1]
+        val vPlane = image.planes[2]
+        val uBuf = uPlane.buffer.duplicate().also { it.rewind() }
+        val vBuf = vPlane.buffer.duplicate().also { it.rewind() }
+        val uLimit = uBuf.limit()
+        val vLimit = vBuf.limit()
+        val ch = h / 2
+        val cw = w / 2
+        for (row in 0 until ch) {
+            val vRowIdx = row * factor * vPlane.rowStride
+            val uRowIdx = row * factor * uPlane.rowStride
+            for (col in 0 until cw) {
+                val vi = vRowIdx + col * factor * vPlane.pixelStride
+                val ui = uRowIdx + col * factor * uPlane.pixelStride
+                out[pos++] = if (vi < vLimit) vBuf.get(vi) else 0
+                out[pos++] = if (ui < uLimit) uBuf.get(ui) else 0
+            }
+        }
+        return Nv21Frame(out, w, h)
+    }
+
     /**
      * Đo độ nét (phương sai Laplacian 4 láng giềng) và độ sáng trung bình trên ảnh xám của
      * [bitmap] 112x112 — ~12k pixel nên rất rẻ, dùng cho FaceQualityChecker lúc đăng ký.

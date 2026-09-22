@@ -4,6 +4,9 @@ import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,8 +59,18 @@ fun FaceCameraPreview(
                 // giật hẳn: camera HAL phải xuất thêm 1 luồng 720p song song với preview và ML Kit
                 // phải quét gấp 3 lần số pixel. 800x600 (đúng tỉ lệ 4:3 của cảm biến) là mức
                 // cân bằng — mặt cách 1 m ~70 px, đủ cho model. Máy không hỗ trợ sẽ tự chọn gần nhất.
+                // ResolutionSelector thay cho setTargetResolution: nếu camera KHÔNG hỗ trợ đúng
+                // 800x600, chọn cỡ THẤP hơn gần nhất (640x480) thay vì nhảy lên 1280x960/1600x1200
+                // — chính là lý do B1 PRO phát hiện mặt mất >1 s.
                 val analysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(800, 600))
+                    .setResolutionSelector(
+                        ResolutionSelector.Builder()
+                            .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                            .setResolutionStrategy(
+                                ResolutionStrategy(Size(800, 600), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)
+                            )
+                            .build()
+                    )
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                 analysis.setAnalyzer(

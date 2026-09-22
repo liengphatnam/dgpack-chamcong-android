@@ -58,6 +58,9 @@ class FaceAnalyzer(
     private companion object {
         /** Vùng chuyển sang bitmap = bounding box mở rộng thêm 60% mỗi phía. */
         const val REGION_PAD_RATIO = 0.6f
+        /** ML Kit phát hiện trên khung thu nhỏ từng này lần (chỉ khi khung gốc đủ rộng). */
+        const val DETECT_DOWNSCALE = 2
+        const val DOWNSCALE_MIN_WIDTH = 640
     }
 
     private val detector = FaceDetection.getClient(
@@ -87,7 +90,16 @@ class FaceAnalyzer(
         val startedAt = now
 
         val rotation = imageProxy.imageInfo.rotationDegrees
-        val inputImage = InputImage.fromMediaImage(mediaImage, rotation)
+        // ML Kit TÌM mặt trên khung thu nhỏ 1/2 (nhanh ~4 lần), còn crop/căn chỉnh vẫn lấy từ
+        // khung gốc đầy đủ nên độ nét mặt đưa vào model không đổi. Toạ độ ML Kit trả về nhân
+        // lại [factor].
+        val factor = if (imageProxy.width >= DOWNSCALE_MIN_WIDTH) DETECT_DOWNSCALE else 1
+        val inputImage = if (factor == 1) {
+            InputImage.fromMediaImage(mediaImage, rotation)
+        } else {
+            val small = ImageUtils.downscaledNv21(imageProxy, factor)
+            InputImage.fromByteArray(small.data, small.width, small.height, rotation, InputImage.IMAGE_FORMAT_NV21)
+        }
         val uprightW = if (rotation == 90 || rotation == 270) imageProxy.height else imageProxy.width
         val uprightH = if (rotation == 90 || rotation == 270) imageProxy.width else imageProxy.height
 
@@ -103,7 +115,8 @@ class FaceAnalyzer(
                     try {
                         // Chỉ chuyển vùng quanh mặt (mở rộng 60% mỗi phía để đủ chỗ cho phép căn
                         // chỉnh xoay/co giãn), KHÔNG chuyển cả khung hình -> nhẹ máy, hết giật.
-                        val box = largest.boundingBox
+                        val bb = largest.boundingBox
+                        val box = Rect(bb.left * factor, bb.top * factor, bb.right * factor, bb.bottom * factor)
                         val padX = (box.width() * REGION_PAD_RATIO).toInt()
                         val padY = (box.height() * REGION_PAD_RATIO).toInt()
                         val wanted = Rect(box.left - padX, box.top - padY, box.right + padX, box.bottom + padY)
@@ -111,7 +124,9 @@ class FaceAnalyzer(
                         val region = face.region
 
                         val leftEye = largest.getLandmark(FaceLandmark.LEFT_EYE)?.position
+                            ?.let { PointF(it.x * factor, it.y * factor) }
                         val rightEye = largest.getLandmark(FaceLandmark.RIGHT_EYE)?.position
+                            ?.let { PointF(it.x * factor, it.y * factor) }
                         val aligned = leftEye != null && rightEye != null
                         val cropped = if (aligned) {
                             ImageUtils.alignFace(
