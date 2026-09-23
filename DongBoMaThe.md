@@ -50,7 +50,7 @@ Endpoint này có thể đã tồn tại (theo `API_FACE_SYNC.md` mục 1). Cầ
 | `cardId` | string hoặc null | Thẻ hiện hành của NV (mục 2). Null nếu chưa gán. |
 | `birthDate` | `"yyyy-MM-dd"` hoặc null | `dm.Employee.BirthDate` (nếu chưa có cột thì thêm, nullable). App chấp nhận cả `"1990-08-20T00:00:00"`. |
 | `lateEarlyCount30d` | int, mặc định 0 | Số lần đi trễ **hoặc** về sớm trong 30 ngày gần nhất, tính từ `hr.AttendanceEvent` so với ca làm việc. Chưa có logic ca thì trả 0. |
-| `commendationCount` | int, mặc định 0 | Số lần khen thưởng / phối hợp nội quy ghi trong Log của ERP trong **tháng hiện tại** (VN). Chưa có nguồn thì trả 0. |
+| `commendationCount` | int, mặc định 0 | Số dòng **khen thưởng / phối hợp nội quy** trong **bảng Log master** của ERP, tháng hiện tại (VN). Xem mục 4 về bảng Log. |
 
 Các trường cũ `hasFaceEmbedding`, `faceUpdatedAt` **không cần nữa** (app bỏ nhận diện khuôn mặt);
 có trả cũng không sao.
@@ -169,17 +169,25 @@ Trả về mọi NV đang hoạt động (NV không có dữ liệu → toàn 0)
 ]
 ```
 
-| Trường | Nguồn gợi ý |
+**Nguồn dữ liệu — ERP chỉ có MỘT bảng Log master duy nhất** cho mọi loại ghi nhận nhân sự (khen
+thưởng, biên bản phạt, nghỉ phép, phối hợp nội quy…), phân biệt bằng cột loại log. Claude phía ERP
+hãy mở bảng đó ra xem tên bảng, tên cột loại và các giá trị loại đang dùng rồi map như sau (KHÔNG tạo
+bảng mới cho các mục này):
+
+| Trường | Nguồn |
 |---|---|
-| `workDays` | tổng ngày công từ `hr.vw_AttendanceDaily` (hoặc view tương đương) trong tháng |
-| `otRegularHours` / `otSundayHours` / `otHolidayHours` | giờ tăng ca ngày thường / chủ nhật / ngày lễ (danh mục ngày lễ của ERP) |
-| `leaveDays` | ngày nghỉ phép đã duyệt trong tháng |
-| `disciplinaryCount` | số biên bản phạt trong tháng |
-| `commendationCount` | số lần khen thưởng / phối hợp nội quy trong tháng |
-| `forgotCardCount` | `COUNT(*)` từ `hr.ForgotCardLog` trong tháng VN |
+| `workDays` | tổng ngày công trong tháng từ dữ liệu chấm công (`hr.AttendanceEvent` / view ngày công hiện có) |
+| `otRegularHours` / `otSundayHours` / `otHolidayHours` | giờ tăng ca ngày thường / chủ nhật / ngày lễ, từ dữ liệu chấm công + ca; ngày lễ theo danh mục ERP nếu có, chưa có thì 0 |
+| `leaveDays` | **Log master**, loại = nghỉ phép, đã duyệt, trong tháng; cộng số ngày (nửa ngày = 0.5) |
+| `disciplinaryCount` | **Log master**, loại = biên bản phạt, `COUNT(*)` trong tháng |
+| `commendationCount` | **Log master**, loại = khen thưởng hoặc phối hợp nội quy, `COUNT(*)` trong tháng |
+| `forgotCardCount` | `COUNT(*)` từ `hr.ForgotCardLog` (mục 3) trong tháng VN — hoặc nếu muốn gom vào Log master thì ghi thêm 1 dòng loại "quên thẻ" mỗi lần nhận forgot-card, miễn là đếm được |
 | `penaltyAmount` | công thức mục 3 áp lên `forgotCardCount` (đồng, số nguyên) |
 
-Chỗ nào ERP chưa có dữ liệu (vd chưa quản lý ngày lễ) thì trả **0** và ghi TODO, không được bỏ trường.
+"Trong tháng" = ngày ghi nhận của dòng log thuộc tháng `month` theo lịch VN. Nếu Log master có cột
+ngày hiệu lực riêng (vd ngày nghỉ) thì dùng cột đó thay cho ngày tạo dòng.
+
+Chỗ nào ERP chưa có dữ liệu thì trả **0** và ghi TODO, không được bỏ trường.
 Tablet hiện `max(forgotCardCount của ERP, số máy tự đếm)` và tự tính lại tiền theo luật đang cài.
 
 ---
