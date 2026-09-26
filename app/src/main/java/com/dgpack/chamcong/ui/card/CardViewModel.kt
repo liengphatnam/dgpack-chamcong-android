@@ -34,7 +34,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 private const val TAG = "CardViewModel"
-private const val MAX_RECENT_SCANS = 5
+private const val MAX_RECENT_SCANS = 1 // chỉ 1 dòng, để không đè lên nút "Quên mang thẻ"
 private const val RESULT_MS = 20_000L
 private const val SHORT_NOTICE_MS = 4_000L
 private const val FORGOT_DONE_MS = 12_000L

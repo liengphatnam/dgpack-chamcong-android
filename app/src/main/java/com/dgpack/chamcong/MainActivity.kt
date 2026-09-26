@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.dgpack.chamcong.card.CardScanBus
 import com.dgpack.chamcong.card.HidCardKeyAccumulator
+import com.dgpack.chamcong.card.NfcReaderControl
 import com.dgpack.chamcong.ui.nav.AppNavHost
 import com.dgpack.chamcong.ui.theme.ChamCongTheme
 
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         nfcAdapter = NfcAdapter.getDefaultAdapter(this) // null nếu máy không có NFC — vẫn dùng đầu đọc HID
+        NfcReaderControl.restarter = ::restartNfcReader
         setContent {
             ChamCongApp()
         }
@@ -33,8 +35,22 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Reader mode: app nhận UID thẻ NFC trực tiếp, không bật app khác, không tiếng "ting" hệ thống.
-        nfcAdapter?.enableReaderMode(
+        nfcAdapter?.let(::enableNfcReader)
+    }
+
+    override fun onPause() {
+        nfcAdapter?.disableReaderMode(this)
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        NfcReaderControl.restarter = null
+        super.onDestroy()
+    }
+
+    /** Reader mode: app nhận UID thẻ NFC trực tiếp, không bật app khác, không tiếng "ting" hệ thống. */
+    private fun enableNfcReader(adapter: NfcAdapter) {
+        adapter.enableReaderMode(
             this,
             { tag -> CardScanBus.emit(CardScanBus.bytesToHex(tag.id)) },
             NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_NFC_B or
@@ -44,9 +60,16 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    override fun onPause() {
-        nfcAdapter?.disableReaderMode(this)
-        super.onPause()
+    /**
+     * Tắt rồi bật lại reader mode để "đánh thức" NFC khi kiosk chạy lâu, quẹt thẻ không ăn.
+     * @return false nếu máy không có NFC hoặc NFC đang bị tắt trong cài đặt hệ thống.
+     */
+    private fun restartNfcReader(): Boolean {
+        val adapter = nfcAdapter ?: return false
+        if (!adapter.isEnabled) return false
+        adapter.disableReaderMode(this)
+        enableNfcReader(adapter)
+        return true
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

@@ -27,6 +27,18 @@ object CardScanBus {
 }
 
 /**
+ * Đánh thức đầu đọc NFC tích hợp: trên tablet giá rẻ, để kiosk chạy lâu thì reader mode hay "ngủ"
+ * (quẹt thẻ không ăn) dù app vẫn ở foreground. MainActivity đăng ký hàm tắt/bật lại reader mode;
+ * màn chấm công gọi [wake] khi người dùng bấm vào hình chiếc thẻ.
+ */
+object NfcReaderControl {
+    /** Trả về true nếu đã bật lại reader mode; false nếu máy không có NFC hoặc NFC đang tắt. */
+    @Volatile var restarter: (() -> Boolean)? = null
+
+    fun wake(): Boolean = restarter?.invoke() ?: false
+}
+
+/**
  * Gom phím từ đầu đọc thẻ kiểu bàn phím: đầu đọc "gõ" mã thẻ rất nhanh (< 250 ms giữa 2 phím)
  * rồi kết thúc bằng Enter. Người gõ tay chậm hơn nên chuỗi bị reset, không nhận nhầm.
  * Chỉ nuốt phím Enter kết thúc mã thẻ; các ký tự vẫn đi tiếp tới ô đang focus (nếu có).

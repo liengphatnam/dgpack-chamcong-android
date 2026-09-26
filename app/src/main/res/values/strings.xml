@@ -5,6 +5,9 @@
     <!-- Chấm công thẻ từ (màn chính) -->
     <string name="card_quet_the">Quét thẻ để chấm công</string>
     <string name="card_nut_quen_the">Quên mang thẻ</string>
+    <string name="card_nfc_danh_thuc">Đánh thức đầu đọc NFC</string>
+    <string name="card_nfc_da_danh_thuc">Đã đánh thức NFC — quẹt thẻ lại</string>
+    <string name="card_nfc_khong_co">Máy không có NFC hoặc NFC đang tắt</string>
     <string name="card_the_la">Thẻ chưa được gán cho ai — liên hệ nhân sự</string>
     <string name="card_da_cham_roi">Đã chấm công trước đó ít phút</string>
     <string name="card_nut_chi_tiet">Chi tiết công tháng này</string>

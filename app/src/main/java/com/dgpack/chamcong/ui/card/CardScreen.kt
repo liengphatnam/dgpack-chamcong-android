@@ -4,6 +4,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -66,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dgpack.chamcong.BuildConfig
 import com.dgpack.chamcong.R
+import com.dgpack.chamcong.card.NfcReaderControl
 import com.dgpack.chamcong.ui.appViewModel
 import com.dgpack.chamcong.ui.common.NumericKeypad
 import com.dgpack.chamcong.ui.camera.CelebrationOverlay
@@ -137,7 +142,7 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
 
             state.celebration?.let { CelebrationOverlay(it) }
 
-            // Góc trên trái: đang chờ đồng bộ + 5 người vừa chấm
+            // Góc trên trái: đang chờ đồng bộ
             Column(
                 modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -157,7 +162,7 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
                 }
             }
 
-            // Góc dưới trái: 5 người vừa chấm + số phiên bản (để không che đồng hồ ở giữa màn hình).
+            // Góc dưới trái: người vừa chấm (1 dòng, tránh đè nút "Quên mang thẻ") + số phiên bản.
             Column(
                 modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -167,7 +172,12 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
                         Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
                             Text(stringResource(R.string.vua_cham_cong), style = MaterialTheme.typography.labelLarge)
                             state.recentScans.forEach { scan ->
-                                Text("${scan.timeLabel}  ${scan.fullName}", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "${scan.timeLabel}  ${scan.fullName}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = RED
+                                )
                             }
                         }
                     }
@@ -191,6 +201,24 @@ fun CardScreen(onOpenAdmin: () -> Unit) {
 
 @Composable
 private fun IdleContent(now: LocalTime, onForgot: () -> Unit) {
+    val context = LocalContext.current
+    // Bấm vào hình chiếc thẻ -> đánh thức NFC (tablet để lâu hay "ngủ" reader mode); hình co nhẹ để biết đã bấm.
+    var pressedAt by remember { mutableStateOf(0L) }
+    val cardScale by animateFloatAsState(
+        targetValue = if (pressedAt > 0L) 0.9f else 1f,
+        animationSpec = tween(120),
+        label = "nfcWakeScale"
+    )
+    LaunchedEffect(pressedAt) {
+        if (pressedAt > 0L) {
+            delay(150)
+            pressedAt = 0L
+        }
+    }
+    val nfcWakeLabel = stringResource(R.string.card_nfc_danh_thuc)
+    val msgWoke = stringResource(R.string.card_nfc_da_danh_thuc)
+    val msgNoNfc = stringResource(R.string.card_nfc_khong_co)
+
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -207,9 +235,18 @@ private fun IdleContent(now: LocalTime, onForgot: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(32.dp))
-        Surface(color = MaterialTheme.colorScheme.primary, shape = CircleShape) {
+        Surface(
+            onClick = {
+                pressedAt = System.currentTimeMillis()
+                val ok = NfcReaderControl.wake()
+                Toast.makeText(context, if (ok) msgWoke else msgNoNfc, Toast.LENGTH_SHORT).show()
+            },
+            color = MaterialTheme.colorScheme.primary,
+            shape = CircleShape,
+            modifier = Modifier.scale(cardScale)
+        ) {
             Icon(
-                Icons.Filled.CreditCard, contentDescription = null,
+                Icons.Filled.CreditCard, contentDescription = nfcWakeLabel,
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(36.dp).size(96.dp)
             )
