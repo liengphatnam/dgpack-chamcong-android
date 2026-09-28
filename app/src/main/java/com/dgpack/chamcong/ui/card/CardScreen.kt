@@ -50,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -95,6 +96,10 @@ private val RED = Color(0xFFE74C3C)
 fun CardScreen(onOpenAdmin: () -> Unit) {
     val viewModel = appViewModel { CardViewModel(it) }
     val state by viewModel.uiState.collectAsState()
+    DisposableEffect(viewModel) {
+        viewModel.setScanActive(true)
+        onDispose { viewModel.setScanActive(false) }
+    }
 
     var now by remember { mutableStateOf(LocalTime.now()) }
     LaunchedEffect(Unit) {

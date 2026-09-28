@@ -20,6 +20,7 @@ import com.dgpack.chamcong.ui.camera.Celebration
 import com.dgpack.chamcong.ui.camera.RecentScan
 import com.dgpack.chamcong.util.TimeUtils
 import com.dgpack.chamcong.voice.VoiceAnnouncer
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -114,6 +115,16 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
 
     fun wantEvidence(): Boolean = needEvidence
 
+    /**
+     * Màn chấm công đang hiển thị hay không. ViewModel vẫn sống khi admin mở màn khác (vd gán thẻ)
+     * — lúc đó thẻ quẹt là để gán, KHÔNG được ghi chấm công/quay thưởng.
+     */
+    @Volatile private var scanActive = true
+
+    fun setScanActive(active: Boolean) {
+        scanActive = active
+    }
+
     init {
         viewModelScope.launch {
             app.attendanceRepository.observeCounts().collect { counts ->
@@ -121,7 +132,18 @@ class CardViewModel(private val app: ChamCongApplication) : ViewModel() {
             }
         }
         viewModelScope.launch {
-            CardScanBus.scans.collect { cardId -> onCardScanned(cardId) }
+            CardScanBus.scans.collect { cardId ->
+                if (!scanActive) return@collect
+                // 1 lượt quét lỗi (DB...) không được làm chết luồng nhận thẻ cho cả ngày còn lại.
+                try {
+                    onCardScanned(cardId)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "Xử lý thẻ $cardId lỗi", e)
+                    backToIdle()
+                }
+            }
         }
     }
 
